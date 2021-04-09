@@ -30,9 +30,12 @@ USAGE
 ```
 <!-- usagestop -->
 <!-- commands -->
-* [`sfdx hello:org [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-helloorg--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:apexload -s <string> -i <string> -I <string> [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceapexload--s-string--i-string--i-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:dump [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedump--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:load [-n <string>] [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceload--n-string--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocesort--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-## `sfdx hello:org [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx veloce:apexload -s <string> -i <string> -I <string> [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 print a greeting and your org IDs
 
@@ -40,7 +43,51 @@ print a greeting and your org IDs
 print a greeting and your org IDs
 
 USAGE
-  $ sfdx hello:org [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  $ sfdx veloce:apexload -s <string> -i <string> -I <string> [-o <string>] [-v <string>] [-u <string>] [--apiversion 
+  <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  -I, --idmap=idmap                                                                 (required) idmap.json file path, to
+                                                                                    store/load <csvId:targetId> pairs
+
+  -i, --externalid=externalid                                                       (required) The column name of the
+                                                                                    external ID.
+
+  -o, --ignorefields=ignorefields                                                   Coma separated list of fields to
+                                                                                    ignore during load
+
+  -s, --sobjecttype=sobjecttype                                                     (required) The sObject type of the
+                                                                                    records you want to upsert.
+
+  -u, --targetusername=targetusername                                               username or alias for the target
+                                                                                    org; overrides default target org
+
+  -v, --targetdevhubusername=targetdevhubusername                                   username or alias for the dev hub
+                                                                                    org; overrides default dev hub org
+
+  --apiversion=apiversion                                                           override the api version used for
+                                                                                    api requests made by this command
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+
+EXAMPLE
+  $ sfdx veloce:apexload -u gp01 -s PricebookEntry -i sfxId__c ./data/insert.csv
+```
+
+_See code: [lib/commands/veloce/apexload.js](https://github.com/veloce-github/veloce-sfdx/blob/v0.0.0/lib/commands/veloce/apexload.js)_
+
+## `sfdx veloce:dump [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+print a greeting and your org IDs
+
+```
+print a greeting and your org IDs
+
+USAGE
+  $ sfdx veloce:dump [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -62,31 +109,112 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLES
-  $ sfdx hello:org --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+  $ sfdx veloce:dump --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
      Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
      My hub org id is: 00Dxx000000001234
   
-  $ sfdx hello:org --name myname --targetusername myOrg@example.com
+  $ sfdx veloce:dump --name myname --targetusername myOrg@example.com
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
-_See code: [lib/commands/hello/org.js](https://github.com/veloce-github/veloce-sfdx/blob/v0.0.0/lib/commands/hello/org.js)_
+_See code: [lib/commands/veloce/dump.js](https://github.com/veloce-github/veloce-sfdx/blob/v0.0.0/lib/commands/veloce/dump.js)_
+
+## `sfdx veloce:load [-n <string>] [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+print a greeting and your org IDs
+
+```
+print a greeting and your org IDs
+
+USAGE
+  $ sfdx veloce:load [-n <string>] [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] 
+  [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  -f, --force                                                                       example boolean flag
+  -n, --file=file                                                                   name to print
+  -n, --name=name                                                                   name to print
+
+  -u, --targetusername=targetusername                                               username or alias for the target
+                                                                                    org; overrides default target org
+
+  -v, --targetdevhubusername=targetdevhubusername                                   username or alias for the dev hub
+                                                                                    org; overrides default dev hub org
+
+  --apiversion=apiversion                                                           override the api version used for
+                                                                                    api requests made by this command
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+
+EXAMPLES
+  $ sfdx veloce:load --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+     Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
+     My hub org id is: 00Dxx000000001234
+  
+  $ sfdx veloce:load --name myname --targetusername myOrg@example.com
+     Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
+```
+
+_See code: [lib/commands/veloce/load.js](https://github.com/veloce-github/veloce-sfdx/blob/v0.0.0/lib/commands/veloce/load.js)_
+
+## `sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+print a greeting and your org IDs
+
+```
+print a greeting and your org IDs
+
+USAGE
+  $ sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  -f, --force                                                                       example boolean flag
+  -n, --objects=objects                                                             name to print
+
+  -u, --targetusername=targetusername                                               username or alias for the target
+                                                                                    org; overrides default target org
+
+  -v, --targetdevhubusername=targetdevhubusername                                   username or alias for the dev hub
+                                                                                    org; overrides default dev hub org
+
+  --apiversion=apiversion                                                           override the api version used for
+                                                                                    api requests made by this command
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+
+EXAMPLES
+  $ sfdx veloce:sort --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+     Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
+     My hub org id is: 00Dxx000000001234
+  
+  $ sfdx veloce:sort --name myname --targetusername myOrg@example.com
+     Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
+```
+
+_See code: [lib/commands/veloce/sort.js](https://github.com/veloce-github/veloce-sfdx/blob/v0.0.0/lib/commands/veloce/sort.js)_
 <!-- commandsstop -->
 <!-- debugging-your-plugin -->
 # Debugging your plugin
 We recommend using the Visual Studio Code (VS Code) IDE for your plugin development. Included in the `.vscode` directory of this plugin is a `launch.json` config file, which allows you to attach a debugger to the node process when running your commands.
 
-To debug the `hello:org` command: 
+To debug the `veloce:dump` command: 
 1. Start the inspector
   
 If you linked your plugin to the sfdx cli, call your command with the `dev-suspend` switch: 
 ```sh-session
-$ sfdx hello:org -u myOrg@example.com --dev-suspend
+$ sfdx veloce:dump -u myOrg@example.com --dev-suspend
 ```
   
 Alternatively, to call your command using the `bin/run` script, set the `NODE_OPTIONS` environment variable to `--inspect-brk` when starting the debugger:
 ```sh-session
-$ NODE_OPTIONS=--inspect-brk bin/run hello:org -u myOrg@example.com
+$ NODE_OPTIONS=--inspect-brk bin/run veloce:dump -u myOrg@example.com
 ```
 
 2. Set some breakpoints in your command code

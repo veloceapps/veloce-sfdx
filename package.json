@@ -8,8 +8,10 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/errors": "^1",
+    "@salesforce/apex-node": "0.1.21",
     "@salesforce/command": "^2",
     "@salesforce/core": "^2",
+    "csv-parse": "^4.15.3",
     "tslib": "^1"
   },
   "devDependencies": {
@@ -45,8 +47,8 @@
     "commands": "./lib/commands",
     "bin": "sfdx",
     "topics": {
-      "hello": {
-        "description": "Commands to say hello."
+      "veloce": {
+        "description": "Commands to load/dump/sort SF data"
       }
     },
     "devPlugins": [

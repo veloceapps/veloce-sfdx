@@ -1,0 +1,8 @@
+{
+  "commandDescription": "print a greeting and your org IDs",
+  "nameFlagDescription": "name to print",
+  "fileFlagDescription": "csv file to load into salesforce",
+  "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",
+  "forceFlagDescription": "example boolean flag",
+  "errorNoOrgResults": "No results found for the org '%s'."
+}
