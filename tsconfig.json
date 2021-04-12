@@ -3,8 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "./lib",
-    "importHelpers": true,
-    "esModuleInterop": true,
+    "importHelpers": true
   },
   "include": [
     "./src/**/*"

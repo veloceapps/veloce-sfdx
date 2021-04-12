@@ -1,9 +1,10 @@
-import apexNode from '@salesforce/apex-node';
 import {flags, SfdxCommand} from '@salesforce/command';
 import {Messages, SfdxError} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
-import parse from 'csv-parse/lib/sync';
-import fs from 'fs';
+
+const apexNode = await import('@salesforce/apex-node');
+const parse = await import('csv-parse/lib/sync');
+const fs = await import('fs');
 
 const MAGIC = '###VELOCEOUTPUT###@';
 const MAGIC_SERACH = `DEBUG|${MAGIC}`;
@@ -105,7 +106,6 @@ for (${sType} i : o) {
 }
 `;
       const conn = this.org.getConnection();
-      // @ts-ignore
       const exec = new apexNode.ExecuteService(conn);
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
