@@ -60,7 +60,7 @@ export default class Org extends SfdxCommand {
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
 
-    let idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+    const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
 
     const fileContent = fs.readFileSync(this.args.file);
     const records = parse(fileContent, {columns: true, bom: true});
