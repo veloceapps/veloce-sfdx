@@ -12,8 +12,18 @@ describe('veloce:apexload', () => {
       return Promise.resolve({ records: [] });
     })
     .stdout()
-    .command(['veloce:apexload', '--targetusername', 'test@org.com'])
+    .command(['veloce:apexload',
+      '--targetusername',
+      'test@org.com',
+      '-s',
+      'PricebookEntry',
+      '-i',
+      'sfxId__c',
+      '-o',
+      'Id,Name,ProductCode',
+      '--idmap=./org-idmap/gp01-idmap.json',
+      './testdata/PricebookEntryStandard/PricebookEntry.csv'])
     .it('runs veloce:apexload --targetusername test@org.com', ctx => {
-      expect(ctx.stdout).to.contain('Hello world! This is org: Super Awesome Org and I will be around until Tue Mar 20 2018!');
+      expect(ctx.stdout).to.contain('');
     });
 });
