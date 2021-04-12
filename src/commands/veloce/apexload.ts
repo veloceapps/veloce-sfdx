@@ -1,14 +1,13 @@
+import apexNode from '@salesforce/apex-node';
 import {flags, SfdxCommand} from '@salesforce/command';
 import {Messages} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
+import parse from 'csv-parse/lib/sync';
+import fs from 'fs';
 
-const ApexNode = require("@salesforce/apex-node");
-const parse = require('csv-parse/lib/sync');
-const fs = require('fs');
-
-const MAGIC = '###VELOCEOUTPUT###@'
-const MAGIC_SERACH = `DEBUG|${MAGIC}`
-const BATCH_SIZE = 100
+const MAGIC = '###VELOCEOUTPUT###@';
+const MAGIC_SERACH = `DEBUG|${MAGIC}`;
+const BATCH_SIZE = 100;
 let currentBatch = 0;
 
 // Initialize Messages with the current plugin directory
@@ -30,9 +29,9 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
-    //-s | --sobjecttype SOBJECTTYPE
-    //-i | --externalid EXTERNALID
-    //-o | ignorefields
+    // -s | --sobjecttype SOBJECTTYPE
+    // -i | --externalid EXTERNALID
+    // -o | ignorefields
     sobjecttype: flags.string({
       char: 's',
       description: messages.getMessage('sobjecttypeFlagDescription'),
@@ -44,7 +43,7 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
-    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignorefieldsFlagDescription')}),
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignorefieldsFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -56,51 +55,43 @@ export default class Org extends SfdxCommand {
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
 
-  private isNumber(s): boolean {
-    if (!isNaN(s)) {
-      return true
-    }
-    return false
-  }
-
   public async run(): Promise<AnyJson> {
-    const sType = this.flags.sobjecttype
-    const extId = this.flags.externalid
-    const ignorefields = (this.flags.ignorefields || '').split(',')
+    const sType = this.flags.sobjecttype;
+    const extId = this.flags.externalid;
+    const ignorefields = (this.flags.ignorefields || '').split(',');
 
-
-    const idmap = JSON.parse(fs.readFileSync(this.flags.idmap))
+    const idmap = JSON.parse(fs.readFileSync(this.flags.idmap));
 
     const fileContent = fs.readFileSync(this.args.file);
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
-      let objects = ''
-      const batch = records.slice(BATCH_SIZE * currentBatch, BATCH_SIZE * (currentBatch + 1))
-      console.log(`batch#${currentBatch} size: ${batch.length}`)
+      let objects = '';
+      const batch = records.slice(BATCH_SIZE * currentBatch, BATCH_SIZE * (currentBatch + 1));
+      console.log(`batch#${currentBatch} size: ${batch.length}`);
       if (batch.length === 0) {
         break;
       }
       for (const r of batch) {
-        const fields = []
+        const fields = [];
         for (const [k, value] of Object.entries(r)) {
-          let s = '' + value
+          let s = '' + value;
           if (s === '' || ignorefields.includes(k)) {
-            continue
+            continue;
           }
-          const m = idmap[s]
+          const m = idmap[s];
           if (m) {
-            s = m
+            s = m;
           }
           if (this.isNumber(s)) {
-            fields.push(`${k}=${s}`)
+            fields.push(`${k}=${s}`);
           } else {
             fields.push(`${k}='${s
               .replace('\'', '\\\'')
               .replace('\n', '\\n')
-              .replace('\r', '\\r')}'`)
+              .replace('\r', '\\r')}'`);
           }
         }
-        objects += `o.add(new ${sType} (${fields.join(',')}));\n`
+        objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
       }
 
       const script = `
@@ -110,9 +101,9 @@ upsert o ${extId};
 for (${sType} i : o) {
   system.debug('${MAGIC}' + i.Id);
 }
-`
+`;
       const conn = this.org.getConnection();
-      const exec = new ApexNode.ExecuteService(conn);
+      const exec = new apexNode.ExecuteService(conn);
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
 
@@ -120,26 +111,33 @@ for (${sType} i : o) {
         const newIds = result.logs
           .split('\n')
           .filter(s => s.includes(MAGIC_SERACH))
-          .map(s => s.split(MAGIC_SERACH)[1])
+          .map(s => s.split(MAGIC_SERACH)[1]);
         batch.forEach((r, index) => {
-          idmap[r.Id] = newIds[index]
+          idmap[r.Id] = newIds[index];
         });
       } else {
-        const out = this.formatDefault(result)
-        this.ux.log(out)
+        const out = this.formatDefault(result);
+        this.ux.log(out);
       }
-      currentBatch++
+      currentBatch++;
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2))
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2));
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
+  }
+
+  private isNumber(s): boolean {
+    if (!isNaN(s)) {
+      return true;
+    }
+    return false;
   }
 
   private formatDefault(response) {
     let outputText = '';
     if (response.success) {
-      outputText += `SUCCESS\n`;
+      outputText += 'SUCCESS\n';
       outputText += `\n${response.logs}`;
     } else {
       const diagnostic = response.diagnostic[0];
@@ -147,7 +145,7 @@ for (${sType} i : o) {
         outputText += `Error: Line: ${diagnostic.lineNumber}, Column: ${diagnostic.columnNumber}\n`;
         outputText += `Error: ${diagnostic.compileProblem}\n`;
       } else {
-        outputText += `COMPILE SUCCESS\n`;
+        outputText += 'COMPILE SUCCESS\n';
         outputText += `Error: ${diagnostic.exceptionMessage}\n`;
         outputText += `Error: ${diagnostic.exceptionStackTrace}\n`;
         outputText += `\n${response.logs}`;

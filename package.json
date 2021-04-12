@@ -57,6 +57,7 @@
   },
   "repository": "veloce-github/veloce-sfdx",
   "scripts": {
+    "fix": "tslint --project . --config tslint.json --format stylish --fix",
     "lint": "tslint --project . --config tslint.json --format stylish",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tslint -p test -t stylish",

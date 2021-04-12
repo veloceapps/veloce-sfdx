@@ -82,5 +82,3 @@ export function runCmd(command: string, noInherit?: boolean) {
   }
   return retVal;
 }
-
-
