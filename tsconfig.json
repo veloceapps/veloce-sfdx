@@ -4,7 +4,7 @@
     "declaration": true,
     "outDir": "./lib",
     "importHelpers": true,
-    "allowSyntheticDefaultImports": true
+    "esModuleInterop": true,
   },
   "include": [
     "./src/**/*"
