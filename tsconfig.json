@@ -3,7 +3,10 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "./lib",
-    "importHelpers": true
+    "importHelpers": true,
+    "lib": [
+      "ES2017",
+    ]
   },
   "include": [
     "./src/**/*"

@@ -1,10 +1,11 @@
 import {flags, SfdxCommand} from '@salesforce/command';
 import {Messages, SfdxError} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
-
-const apexNode = await import('@salesforce/apex-node');
-const parse = await import('csv-parse/lib/sync');
-const fs = await import('fs');
+/* tslint:disable */
+const apexNode = require('@salesforce/apex-node');
+const parse = require('csv-parse/lib/sync');
+const fs = require('fs');
+/* tslint:enable */
 
 const MAGIC = '###VELOCEOUTPUT###@';
 const MAGIC_SERACH = `DEBUG|${MAGIC}`;
