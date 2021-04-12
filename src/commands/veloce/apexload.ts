@@ -83,7 +83,7 @@ export default class Org extends SfdxCommand {
             continue;
           }
           const m = idmap[s];
-          if (m) {
+          if (k !== extId && m) { // dont map ExternalID column!
             s = m;
           }
           if (this.isNumber(s)) {
