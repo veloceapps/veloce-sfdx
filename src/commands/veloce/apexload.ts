@@ -56,6 +56,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
+    let ok = false
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
@@ -109,6 +110,7 @@ for (${sType} i : o) {
       const result = await exec.executeAnonymous(execAnonOptions);
 
       if (result.success) {
+        ok = true
         const newIds = result.logs
           .split('\n')
           .filter(s => s.includes(MAGIC_SERACH))
@@ -124,6 +126,9 @@ for (${sType} i : o) {
     }
 
     fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2));
+    if (!ok) {
+      process.exit(-1)
+    }
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
   }
