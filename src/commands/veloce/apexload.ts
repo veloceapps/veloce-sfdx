@@ -9,7 +9,6 @@ const fs = require('fs');
 
 const MAGIC = '###VELOCEOUTPUT###@';
 const MAGIC_SERACH = `DEBUG|${MAGIC}`;
-const BATCH_SIZE = 100;
 let currentBatch = 0;
 
 // Initialize Messages with the current plugin directory
@@ -45,7 +44,9 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
-    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignorefieldsFlagDescription')})
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
+    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
+    boolfields: flags.string({char: 'B', description: messages.getMessage('boolFieldsFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -60,9 +61,11 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     let ok = false;
     let output = '';
+    const batchSize = parseInt(this.flags.batch || 10, 10);
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
+    const boolfields = (this.flags.boolfields || '').split(',');
 
     const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
 
@@ -70,7 +73,7 @@ export default class Org extends SfdxCommand {
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
       let objects = '';
-      const batch = records.slice(BATCH_SIZE * currentBatch, BATCH_SIZE * (currentBatch + 1));
+      const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
       console.log(`batch#${currentBatch} size: ${batch.length}`);
       if (batch.length === 0) {
         break;
@@ -86,7 +89,9 @@ export default class Org extends SfdxCommand {
           if (k !== extId && m) { // dont map ExternalID column!
             s = m;
           }
-          if (this.isNumber(s)) {
+          if (boolfields.includes(k)) {
+            fields.push(`${k}=${s}`);
+          } else if (this.isNumber(s)) {
             fields.push(`${k}=${s}`);
           } else {
             fields.push(`${k}='${s
