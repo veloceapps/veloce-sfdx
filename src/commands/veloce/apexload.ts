@@ -126,6 +126,8 @@ for (${sType} i : o) {
           idmap[r.Id] = newIds[index];
         });
       } else {
+        this.ux.log(script);
+
         const out = this.formatDefault(result);
         this.ux.log(out);
         output += `${out}\n`;
