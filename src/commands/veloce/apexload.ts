@@ -59,7 +59,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    let ok = false;
+    let ok = true;
     let output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
     const sType = this.flags.sobjecttype;
@@ -116,18 +116,19 @@ for (${sType} i : o) {
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
 
+      this.ux.log(script);
+
       if (result.success) {
-        ok = true;
         const newIds = result.logs
           .split('\n')
           .filter(s => s.includes(MAGIC_SERACH))
           .map(s => s.split(MAGIC_SERACH)[1]);
         batch.forEach((r, index) => {
           idmap[r.Id] = newIds[index];
+          this.ux.log(`${idmap[r.Id]} => ${newIds[index]}`)
         });
       } else {
-        this.ux.log(script);
-
+        ok = false;
         const out = this.formatDefault(result);
         this.ux.log(out);
         output += `${out}\n`;
