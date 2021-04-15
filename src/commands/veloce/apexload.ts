@@ -6,7 +6,7 @@ const apexNode = require('@salesforce/apex-node');
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
 /* tslint:enable */
-const LOGS_TRESHOLD = 'This org has reached its daily usage limit of apex log headers.'
+const LOGS_TRESHOLD = 'This org has reached its daily usage limit of apex log headers.';
 const MAGIC = '###VELOCEOUTPUT###@';
 const MAGIC_SERACH = `DEBUG|${MAGIC}`;
 let currentBatch = 0;
@@ -126,7 +126,7 @@ for (${sType} i : o) {
           .map(s => s.split(MAGIC_SERACH)[1]);
         batch.forEach((r, index) => {
           idmap[r.Id] = newIds[index];
-          this.ux.log(`${r.Id} => ${newIds[index]}`)
+          this.ux.log(`${r.Id} => ${newIds[index]}`);
         });
       } else {
         ok = false;
