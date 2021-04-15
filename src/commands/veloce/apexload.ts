@@ -6,7 +6,7 @@ const apexNode = require('@salesforce/apex-node');
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
 /* tslint:enable */
-
+const LOGS_TRESHOLD = 'This org has reached its daily usage limit of apex log headers.'
 const MAGIC = '###VELOCEOUTPUT###@';
 const MAGIC_SERACH = `DEBUG|${MAGIC}`;
 let currentBatch = 0;
@@ -116,16 +116,17 @@ for (${sType} i : o) {
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
 
-      this.ux.log(script);
-
       if (result.success) {
+        if (LOGS_TRESHOLD === result.logs) {
+          throw new SfdxError(result.logs, 'ApexLimitError');
+        }
         const newIds = result.logs
           .split('\n')
           .filter(s => s.includes(MAGIC_SERACH))
           .map(s => s.split(MAGIC_SERACH)[1]);
         batch.forEach((r, index) => {
           idmap[r.Id] = newIds[index];
-          this.ux.log(`${idmap[r.Id]} => ${newIds[index]}`)
+          this.ux.log(`${r.Id} => ${newIds[index]}`)
         });
       } else {
         ok = false;
