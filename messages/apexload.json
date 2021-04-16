@@ -6,5 +6,6 @@
   "externalidFlagDescription": "The column name of the external ID.",
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
-  "boolFieldsFlagDescription": "Coma separated list of boolean fields"
+  "boolFieldsFlagDescription": "Coma separated list of boolean fields",
+  "numericFieldsFlagDescription": "Coma separated list of boolean fields"
 }

@@ -48,7 +48,8 @@ export default class Org extends SfdxCommand {
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
-    boolfields: flags.string({char: 'B', description: messages.getMessage('boolFieldsFlagDescription')})
+    boolfields: flags.string({char: 'B', description: messages.getMessage('boolFieldsFlagDescription')}),
+    numericfields: flags.string({char: 'N', description: messages.getMessage('numericFieldsFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -68,6 +69,8 @@ export default class Org extends SfdxCommand {
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
     const boolfields = (this.flags.boolfields || '').split(',');
+    const numericfields = (this.flags.numericfields || '').split(',');
+
     const upsert = this.flags.upsert || false;
 
     const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
@@ -87,7 +90,7 @@ export default class Org extends SfdxCommand {
           ids.push(r[extId]);
           extId2OldId[r[extId]] = r.Id;
         } else {
-          this.ux.log(`${r.Id}:Missing external ID, will use mapped/original id instead: ${idmap[r.Id] ? idmap[r.Id] : r.Id}`);
+          this.ux.log(`${r.Id}:Missing external ID, will use mapped/original Id instead: ${idmap[r.Id] ? idmap[r.Id] : r.Id}`);
         }
       });
       let script = '';
@@ -105,7 +108,7 @@ export default class Org extends SfdxCommand {
           }
           if (boolfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
-          } else if (this.isNumber(s)) {
+          } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
@@ -177,6 +180,7 @@ ${objects}
     if (!ok) {
       throw new SfdxError(output, 'ApexError');
     }
+    this.ux.log(`Data successfully loaded`);
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
   }
@@ -263,15 +267,6 @@ ${objects}
       }
     }
     return columns;
-  }
-
-  private isNumber(s)
-    :
-    boolean {
-    if (!isNaN(s)) {
-      return true;
-    }
-    return false;
   }
 
   private formatDefault(response) {
