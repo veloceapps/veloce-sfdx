@@ -44,6 +44,7 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('externalidFlagDescription'),
       required: true
     }),
+    upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
@@ -67,18 +68,30 @@ export default class Org extends SfdxCommand {
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
     const boolfields = (this.flags.boolfields || '').split(',');
+    const upsert = this.flags.upsert || false;
 
     const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
 
     const fileContent = fs.readFileSync(this.args.file);
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
-      let objects = '';
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
       console.log(`batch#${currentBatch} size: ${batch.length}`);
       if (batch.length === 0) {
         break;
       }
+      const ids = [];
+      const extId2OldId = {};
+      batch.forEach(r => {
+        if (r[extId]) {
+          ids.push(r[extId]);
+          extId2OldId[r[extId]] = r.Id;
+        } else {
+          this.ux.log(`${r.Id}:Missing external ID, will use mapped/original id instead: ${idmap[r.Id] ? idmap[r.Id] : r.Id}`);
+        }
+      });
+      let script = '';
+      let objects = '';
       for (const r of batch) {
         const fields = [];
         for (const [k, value] of Object.entries(r)) {
@@ -91,24 +104,45 @@ export default class Org extends SfdxCommand {
             s = m;
           }
           if (boolfields.includes(k)) {
-            fields.push(`${k}=${s}`);
+            fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else if (this.isNumber(s)) {
-            fields.push(`${k}=${s}`);
+            fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
-            fields.push(`${k}='${s
+            fields.push(`${upsert ? '' : 'o.'}${k}='${s
               .replace('\'', '\\\'')
               .replace('\n', '\\n')
               .replace('\r', '\\r')}'`);
           }
         }
-        objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
+        if (upsert) {
+          objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
+        } else {
+          if (r[extId]) {
+            objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`;
+          } else {
+            // Fallback to mapped Id
+            const id = idmap[r.Id] ? idmap[r.Id] : r.Id;
+            objects += `o = [SELECT Id FROM ${sType} WHERE Id='${id}' LIMIT 1];\n`;
+          }
+          objects += `${fields.join(';')};\n`;
+          objects += 'update o;\n';
+        }
       }
 
-      const script = `
+      if (upsert) {
+        script = `
 ${sType} [] o = new List<${sType}>();
 ${objects}
 upsert o ${extId};
 `;
+      } else {
+        // Update only mode!
+        script = `
+${sType} o;
+${objects}
+`;
+      }
+
       const conn = this.org.getConnection();
       const exec = new apexNode.ExecuteService(conn);
       const execAnonOptions = Object.assign({}, {apexCode: script});
@@ -121,12 +155,6 @@ upsert o ${extId};
         output += `${out}\n`;
       }
       // Query back Ids
-      const ids = [];
-      const extId2OldId = {};
-      batch.forEach(r => {
-        ids.push(r[extId]);
-        extId2OldId[r[extId]] = r.Id;
-      });
       const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
       const queryResult: SoqlQueryResult = await this.runSoqlQuery(conn, query, this.logger);
       if (!queryResult.result.done) {
@@ -138,7 +166,7 @@ upsert o ${extId};
         if (extId2OldId[r[extId]] && r.Id) {
           idmap[extId2OldId[r[extId]]] = r.Id;
         } else {
-          throw new SfdxError(`Cannot insert id map record (missing srcId/targetId), ${extId} = ${r[extId]}: ${extId2OldId[r[extId]]} => ${r.Id}`, 'ApexError');
+          throw new SfdxError(`Cannot insert id map record (missing srcId/targetId), ${extId}=${r[extId]}: ${extId2OldId[r[extId]]} => ${r.Id}`, 'ApexError');
         }
       });
       /* tslint:enable */
@@ -153,7 +181,8 @@ upsert o ${extId};
     return {orgId: this.org.getOrgId()};
   }
 
-  public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger): Promise<SoqlQueryResult> {
+  public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
+  ): Promise<SoqlQueryResult> {
     let columns: Field[] = [];
     logger.debug('running query');
 
@@ -183,11 +212,14 @@ upsert o ${extId};
    * @param connection
    * @param query
    */
-  public async retrieveColumns(connection: Connection | Tooling, query: string): Promise<Field[]> {
+  public async retrieveColumns(connection: Connection | Tooling, query: string):
+    Promise<Field[]> {
     // eslint-disable-next-line no-underscore-dangle
     const columnUrl = `${connection._baseUrl()}/query?q=${encodeURIComponent(query)}&columns=true`;
     const results = toJsonMap(await connection.request(columnUrl));
-    const columns: Field[] = [];
+    const columns
+      :
+      Field[] = [];
     for (let column of ensureJsonArray(results.columnMetadata)) {
       column = ensureJsonMap(column);
       const name = ensureString(column.columnName);
@@ -233,7 +265,9 @@ upsert o ${extId};
     return columns;
   }
 
-  private isNumber(s): boolean {
+  private isNumber(s)
+    :
+    boolean {
     if (!isNaN(s)) {
       return true;
     }
