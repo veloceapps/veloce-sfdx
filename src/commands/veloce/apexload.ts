@@ -165,7 +165,9 @@ ${objects}
       }
       /* tslint:disable */
       queryResult.result.records.forEach((r: any) => {
-        this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
+        if (extId2OldId[r[extId]] != r.Id) {
+          this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
+        }
         if (extId2OldId[r[extId]] && r.Id) {
           idmap[extId2OldId[r[extId]]] = r.Id;
         } else {
