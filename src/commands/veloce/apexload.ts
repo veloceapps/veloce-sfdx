@@ -132,7 +132,8 @@ upsert o ${extId};
       if (!queryResult.result.done) {
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
       }
-      queryResult.result.records.forEach((r: object) => {
+      /* tslint:disable */
+      queryResult.result.records.forEach((r: any) => {
         this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
         if (extId2OldId[r[extId]] && r.Id) {
           idmap[extId2OldId[r[extId]]] = r.Id;
@@ -140,6 +141,7 @@ upsert o ${extId};
           throw new SfdxError(`Cannot insert id map record (missing srcId/targetId), ${extId} = ${r[extId]}: ${extId2OldId[r[extId]]} => ${r.Id}`, 'ApexError');
         }
       });
+      /* tslint:enable */
       currentBatch++;
     }
 
