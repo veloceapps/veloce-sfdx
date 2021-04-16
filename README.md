@@ -4,13 +4,13 @@ veloce-sfdx
 veloce sfdx plugin
 
 [![Version](https://img.shields.io/npm/v/veloce-sfdx.svg)](https://npmjs.org/package/veloce-sfdx)
-[![CircleCI](https://circleci.com/gh/veloce-github/veloce-sfdx/tree/master.svg?style=shield)](https://circleci.com/gh/veloce-github/veloce-sfdx/tree/master)
-[![Appveyor CI](https://ci.appveyor.com/api/projects/status/github/veloce-github/veloce-sfdx?branch=master&svg=true)](https://ci.appveyor.com/project/heroku/veloce-sfdx/branch/master)
-[![Codecov](https://codecov.io/gh/veloce-github/veloce-sfdx/branch/master/graph/badge.svg)](https://codecov.io/gh/veloce-github/veloce-sfdx)
-[![Greenkeeper](https://badges.greenkeeper.io/veloce-github/veloce-sfdx.svg)](https://greenkeeper.io/)
-[![Known Vulnerabilities](https://snyk.io/test/github/veloce-github/veloce-sfdx/badge.svg)](https://snyk.io/test/github/veloce-github/veloce-sfdx)
+[![CircleCI](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master.svg?style=shield)](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master)
+[![Appveyor CI](https://ci.appveyor.com/api/projects/status/github/veloceapps/veloce-sfdx?branch=master&svg=true)](https://ci.appveyor.com/project/heroku/veloce-sfdx/branch/master)
+[![Codecov](https://codecov.io/gh/veloceapps/veloce-sfdx/branch/master/graph/badge.svg)](https://codecov.io/gh/veloceapps/veloce-sfdx)
+[![Greenkeeper](https://badges.greenkeeper.io/veloceapps/veloce-sfdx.svg)](https://greenkeeper.io/)
+[![Known Vulnerabilities](https://snyk.io/test/github/veloceapps/veloce-sfdx/badge.svg)](https://snyk.io/test/github/veloceapps/veloce-sfdx)
 [![Downloads/week](https://img.shields.io/npm/dw/veloce-sfdx.svg)](https://npmjs.org/package/veloce-sfdx)
-[![License](https://img.shields.io/npm/l/veloce-sfdx.svg)](https://github.com/veloce-github/veloce-sfdx/blob/master/package.json)
+[![License](https://img.shields.io/npm/l/veloce-sfdx.svg)](https://github.com/veloceapps/veloce-sfdx/blob/master/package.json)
 
 <!-- toc -->
 * [Debugging your plugin](#debugging-your-plugin)
@@ -91,7 +91,7 @@ EXAMPLE
   $ sfdx veloce:apexload -u gp01 -s PricebookEntry -i sfxId__c ./data/insert.csv
 ```
 
-_See code: [lib/commands/veloce/apexload.js](https://github.com/veloce-github/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/apexload.js)_
+_See code: [lib/commands/veloce/apexload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/apexload.js)_
 
 ## `sfdx veloce:dump [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -131,7 +131,7 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
-_See code: [lib/commands/veloce/dump.js](https://github.com/veloce-github/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/dump.js)_
+_See code: [lib/commands/veloce/dump.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/dump.js)_
 
 ## `sfdx veloce:load [-n <string>] [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -172,7 +172,7 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
-_See code: [lib/commands/veloce/load.js](https://github.com/veloce-github/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/load.js)_
+_See code: [lib/commands/veloce/load.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/load.js)_
 
 ## `sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -212,7 +212,7 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
-_See code: [lib/commands/veloce/sort.js](https://github.com/veloce-github/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/sort.js)_
+_See code: [lib/commands/veloce/sort.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.0/lib/commands/veloce/sort.js)_
 <!-- commandsstop -->
 <!-- debugging-your-plugin -->
 # Debugging your plugin

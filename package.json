@@ -2,8 +2,8 @@
   "name": "veloce-sfdx",
   "description": "veloce sfdx plugin",
   "version": "1.0.0",
-  "author": "veloce-github",
-  "bugs": "https://github.com/veloce-github/veloce-sfdx/issues",
+  "author": "veloceapps",
+  "bugs": "https://github.com/veloceapps/veloce-sfdx/issues",
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -39,7 +39,7 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/veloce-github/veloce-sfdx",
+  "homepage": "https://github.com/veloceapps/veloce-sfdx",
   "keywords": [
     "sfdx-plugin"
   ],
@@ -56,7 +56,7 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "veloce-github/veloce-sfdx",
+  "repository": "veloceapps/veloce-sfdx",
   "scripts": {
     "fix": "tslint --project . --config tslint.json --format stylish --fix",
     "lint": "tslint --project . --config tslint.json --format stylish",
