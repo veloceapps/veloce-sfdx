@@ -1,14 +1,15 @@
 import {flags, SfdxCommand} from '@salesforce/command';
-import {Messages, SfdxError} from '@salesforce/core';
+import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
+import {Tooling} from '@salesforce/core/lib/connection';
 import {AnyJson} from '@salesforce/ts-types';
+import {ensureJsonArray, ensureJsonMap, ensureString, isJsonArray, toJsonMap} from '@salesforce/ts-types';
+import {Field, FieldType, SoqlQueryResult} from '../../shared/dataSoqlQueryTypes';
+
 /* tslint:disable */
 const apexNode = require('@salesforce/apex-node');
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
 /* tslint:enable */
-const LOGS_TRESHOLD = 'This org has reached its daily usage limit of apex log headers.';
-const MAGIC = '###VELOCEOUTPUT###@';
-const MAGIC_SERACH = `DEBUG|${MAGIC}`;
 let currentBatch = 0;
 
 // Initialize Messages with the current plugin directory
@@ -107,33 +108,38 @@ export default class Org extends SfdxCommand {
 ${sType} [] o = new List<${sType}>();
 ${objects}
 upsert o ${extId};
-for (${sType} i : o) {
-  system.debug('${MAGIC}' + i.Id);
-}
 `;
       const conn = this.org.getConnection();
       const exec = new apexNode.ExecuteService(conn);
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
 
-      if (result.success) {
-        if (LOGS_TRESHOLD === result.logs) {
-          throw new SfdxError(result.logs, 'ApexLimitError');
-        }
-        const newIds = result.logs
-          .split('\n')
-          .filter(s => s.includes(MAGIC_SERACH))
-          .map(s => s.split(MAGIC_SERACH)[1]);
-        batch.forEach((r, index) => {
-          idmap[r.Id] = newIds[index];
-          this.ux.log(`${r.Id} => ${newIds[index]}`);
-        });
-      } else {
+      if (!result.success) {
         ok = false;
         const out = this.formatDefault(result);
         this.ux.log(out);
         output += `${out}\n`;
       }
+      // Query back Ids
+      const ids = [];
+      const extId2OldId = {};
+      batch.forEach(r => {
+        ids.push(r[extId]);
+        extId2OldId[r[extId]] = r.Id;
+      });
+      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
+      const queryResult: SoqlQueryResult = await this.runSoqlQuery(conn, query, this.logger);
+      if (!queryResult.result.done) {
+        throw new SfdxError(`Query not done: ${query}`, 'ApexError');
+      }
+      queryResult.result.records.forEach((r: object) => {
+        this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
+        if (extId2OldId[r[extId]] && r.Id) {
+          idmap[extId2OldId[r[extId]]] = r.Id;
+        } else {
+          throw new SfdxError(`Cannot insert id map record (missing srcId/targetId), ${extId} = ${r[extId]}: ${extId2OldId[r[extId]]} => ${r.Id}`, 'ApexError');
+        }
+      });
       currentBatch++;
     }
 
@@ -143,6 +149,86 @@ for (${sType} i : o) {
     }
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
+  }
+
+  public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger): Promise<SoqlQueryResult> {
+    let columns: Field[] = [];
+    logger.debug('running query');
+
+    const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000});
+    logger.debug(`Query complete with ${result.totalSize} records returned`);
+    if (result.totalSize) {
+      logger.debug('fetching columns for query');
+      columns = await this.retrieveColumns(connection, query);
+    }
+
+    // remove nextRecordsUrl and force done to true
+    delete result.nextRecordsUrl;
+    result.done = true;
+    return {
+      query,
+      columns,
+      result
+    };
+  }
+
+  /**
+   * Utility to fetch the columns involved in a soql query.
+   *
+   * Columns are then transformed into one of three types, Field, SubqueryField and FunctionField. List of
+   * fields is returned as the product.
+   *
+   * @param connection
+   * @param query
+   */
+  public async retrieveColumns(connection: Connection | Tooling, query: string): Promise<Field[]> {
+    // eslint-disable-next-line no-underscore-dangle
+    const columnUrl = `${connection._baseUrl()}/query?q=${encodeURIComponent(query)}&columns=true`;
+    const results = toJsonMap(await connection.request(columnUrl));
+    const columns: Field[] = [];
+    for (let column of ensureJsonArray(results.columnMetadata)) {
+      column = ensureJsonMap(column);
+      const name = ensureString(column.columnName);
+
+      if (isJsonArray(column.joinColumns) && column.joinColumns.length > 0) {
+        if (column.aggregate) {
+          const field: Field = {
+            fieldType: FieldType.subqueryField,
+            name,
+            fields: []
+          };
+          for (const subcolumn of column.joinColumns) {
+            const f: Field = {
+              fieldType: FieldType.field,
+              name: ensureString(ensureJsonMap(subcolumn).columnName)
+            };
+            if (field.fields) field.fields.push(f);
+          }
+          columns.push(field);
+        } else {
+          for (const subcolumn of column.joinColumns) {
+            const f: Field = {
+              fieldType: FieldType.field,
+              name: `${name}.${ensureString(ensureJsonMap(subcolumn).columnName)}`
+            };
+            columns.push(f);
+          }
+        }
+      } else if (column.aggregate) {
+        const field: Field = {
+          fieldType: FieldType.functionField,
+          name: ensureString(column.displayName)
+        };
+        // If it isn't an alias, skip so the display name is used when messaging rows
+        if (!/expr[0-9]+/.test(name)) {
+          field.alias = name;
+        }
+        columns.push(field);
+      } else {
+        columns.push({fieldType: FieldType.field, name} as Field);
+      }
+    }
+    return columns;
   }
 
   private isNumber(s): boolean {
