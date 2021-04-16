@@ -182,7 +182,7 @@ ${objects}
     if (!ok) {
       throw new SfdxError(output, 'ApexError');
     }
-    this.ux.log(`Data successfully loaded`);
+    this.ux.log('Data successfully loaded');
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
   }
