@@ -1,5 +1,5 @@
 {
-  "commandDescription": "print a greeting and your org IDs",
+  "commandDescription": "Loads data into org, by creation of Anonymous apex code and it's execution. Operation is working in two modes: Update only (default) and Upsert --upsert. After each batch SOQL query is performed and ID Map file is populated with OldId=>NewId mappings",
   "sobjecttypeFlagDescription": "The sObject type of the records you want to upsert.",
   "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",
   "upsertFlagDescription": "Should use APEX upsert (could insert extra records) or update-only APEX (one by one), which is default",
@@ -7,5 +7,6 @@
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
   "boolFieldsFlagDescription": "Coma separated list of boolean fields",
-  "numericFieldsFlagDescription": "Coma separated list of boolean fields"
+  "numericFieldsFlagDescription": "Coma separated list of boolean fields",
+  "fileFlagDescription": "Full path to csv file"
 }

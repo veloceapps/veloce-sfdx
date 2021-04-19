@@ -24,7 +24,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    `$ sfdx veloce:apexload -u gp01 -s PricebookEntry -i sfxId__c ./data/insert.csv
+    `$ sfdx veloce:apexload -u gp01 -s PricebookEntry -i sfxId__c -f ./data/insert.csv
   `];
 
   public static args = [{name: 'file'}];
@@ -45,6 +45,7 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
+    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
@@ -75,7 +76,7 @@ export default class Org extends SfdxCommand {
 
     const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
 
-    const fileContent = fs.readFileSync(this.args.file);
+    const fileContent = fs.readFileSync(this.flags.file);
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));

@@ -1,5 +1,5 @@
 {
-  "commandDescription": "print a greeting and your org IDs",
+  "commandDescription": "Sort custom/standard object list by metadata dependencies (references)",
   "objectsFlagDescription": "name to print",
   "forceFlagDescription": "example boolean flag",
   "errorNoOrgResults": "No results found for the org '%s'."

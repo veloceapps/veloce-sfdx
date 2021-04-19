@@ -1,5 +1,5 @@
 {
-  "commandDescription": "print a greeting and your org IDs",
+  "commandDescription": "Load data into org, by use of standard Salesforce API",
   "nameFlagDescription": "name to print",
   "fileFlagDescription": "csv file to load into salesforce",
   "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",

@@ -1,5 +1,5 @@
 {
-  "commandDescription": "print a greeting and your org IDs",
+  "commandDescription": "Dumps data from an org, using SOQL query",
   "nameFlagDescription": "name to print",
   "forceFlagDescription": "example boolean flag",
   "errorNoOrgResults": "No results found for the org '%s'."
