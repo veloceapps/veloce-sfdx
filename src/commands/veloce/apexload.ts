@@ -69,14 +69,24 @@ export default class Org extends SfdxCommand {
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
+    if (!ignorefields.includes('Id')) {
+      ignorefields.push('Id');
+    }
     const boolfields = (this.flags.boolfields || '').split(',');
     const numericfields = (this.flags.numericfields || '').split(',');
 
     const upsert = this.flags.upsert || false;
 
-    const idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
-
     const fileContent = fs.readFileSync(this.flags.file);
+    let idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+
+    try {
+        idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+      } catch (err) {
+        this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
+        idmap = {};
+      }
+
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
@@ -87,12 +97,13 @@ export default class Org extends SfdxCommand {
       const ids = [];
       const extId2OldId = {};
       batch.forEach(r => {
-        if (r[extId]) {
-          ids.push(r[extId]);
-          extId2OldId[r[extId]] = r.Id;
-        } else {
-          this.ux.log(`${r.Id}:Missing external ID, will use mapped/original Id instead: ${idmap[r.Id] ? idmap[r.Id] : r.Id}`);
+        // Populate external ID from ID
+        if (!r[extId]) {
+          this.ux.log(`${r.Id}: Auto-populating ${extId} with ${r.Id}`);
+          r[extId] = r.Id;
         }
+        ids.push(r[extId]);
+        extId2OldId[r[extId]] = r.Id;
       });
       let script = '';
       let objects = '';
@@ -121,13 +132,7 @@ export default class Org extends SfdxCommand {
         if (upsert) {
           objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
         } else {
-          if (r[extId]) {
-            objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`;
-          } else {
-            // Fallback to mapped Id
-            const id = idmap[r.Id] ? idmap[r.Id] : r.Id;
-            objects += `o = [SELECT Id FROM ${sType} WHERE Id='${id}' LIMIT 1];\n`;
-          }
+          objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`;
           objects += `${fields.join(';')};\n`;
           objects += 'update o;\n';
         }
@@ -179,7 +184,7 @@ ${objects}
       currentBatch++;
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2));
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2) , {flag: 'w+'});
     if (!ok) {
       throw new SfdxError(output, 'ApexError');
     }
