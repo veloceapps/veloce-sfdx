@@ -3,6 +3,7 @@ import { Messages, SfdxError } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
+const zlib = require("zlib");
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
@@ -68,11 +69,13 @@ export default class Org extends SfdxCommand {
     }
     // Document body always only returns one result
     const url = result.records[0].Body;
-    this.ux.log(url);
     /* tslint:disable */
     const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
     /* tslint:enable */
-    fs.writeFileSync(`${this.flags.outputfile}`, res, {flag: 'w+'});
+    const gzipped = Buffer.from(res.toString(), 'base64');
+    const data = zlib.gunzipSync(gzipped);
+    fs.writeFileSync(`${this.flags.outputfile}`, data, {flag: 'w+'});
+
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
   }
