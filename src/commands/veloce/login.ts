@@ -18,9 +18,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    `$ sfdx veloce:login -u username -p ./PASSWORDFILE -a alias01 --targetdevhubusername devhub@org.com
-  `,
-    `$ sfdx veloce:login -u username -p ./PASSWORDFILE -a alias02
+    `$ sfdx veloce:login -u username -p ./PASSWORDFILE -a alias01
   `
   ];
 
@@ -58,27 +56,28 @@ export default class Org extends SfdxCommand {
   protected static requiresUsername = false;
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = false;
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const url = this.flags.instanceurl;
-    const securitytoken = this.flags.securitytoken || '';
-    const user = this.flags.user;
-    const alias = this.flags.alias;
+    const url = this.flags.instanceurl.trim();
+    const securitytoken = (this.flags.securitytoken || '').trim();
+    const user = this.flags.user.trim();
+    const alias = this.flags.alias.trim();
 
     const passwordfile = this.flags.passwordfile;
-    const password = fs.readFileSync(passwordfile, 'utf8').concat(securitytoken);
+    const password = fs.readFileSync(passwordfile, 'utf8').trim().concat(securitytoken).trim();
 
     const conn = new Connection({
       loginUrl: url
     });
 
+    this.ux.log(`Logging with ${user} into ${url}`);
     await conn.login(user, password, (err, userInfo) => {
       if (err) {
-        throw new SfdxError('Unable to connect to the target org');
+        throw new SfdxError(`Unable to connect to the target org: ${err}`);
       }
     });
 
