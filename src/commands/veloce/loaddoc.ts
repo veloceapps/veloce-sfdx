@@ -42,7 +42,7 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     foldername: flags.string({
-      char: 'f',
+      char: 'F',
       description: messages.getMessage('foldernameFlagDescription'),
       required: true
     }),
@@ -114,7 +114,6 @@ export default class Org extends SfdxCommand {
                                                      from Folder
                                                      WHERE Name = 'velo_product_models'`);
       if (!folderResult.records || folderResult.records.length <= 0) {
-        this.ux.log('New folder creation');
         // Create new Folder
         const folder = {
           Name: this.flags.foldername,
