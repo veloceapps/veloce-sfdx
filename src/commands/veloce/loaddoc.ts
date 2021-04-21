@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
@@ -11,16 +11,18 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'dumpdoc');
+const messages = Messages.loadMessages('veloce-sfdx', 'loaddoc');
 
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+  `$ sfdx veloce:loaddoc -i 01521000000gHgnAAE --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+  Document content here
   `,
-  `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
+  `$ sfdx veloce:loaddoc -i 01521000000gHgnAAE --name myname --targetusername myOrg@example.com
+  Document content here
   `
   ];
 
@@ -28,14 +30,15 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
+    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     id: flags.string({
       char: 'i',
       description: messages.getMessage('idFlagDescription'),
       required: true
     }),
-    outputfile: flags.string({
-      char: 'o',
-      description: messages.getMessage('outputfileFlagDescription'),
+    inputfile: flags.string({
+      char: 'f',
+      description: messages.getMessage('inputfileFlagDescription'),
       required: true
     })
   };
@@ -50,12 +53,32 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
+    let idmap;
+    try {
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+    } catch (err) {
+      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
+      idmap = {};
+    }
+    const id = idmap[this.flags.id] ? idmap[this.flags.id] : this.flags.id;
+
     // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
+    const data = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'});
+    const gzipped = zlib.gzipSync(data);
+    const b64Data = gzipped.toString('base64');
+
     const conn = this.org.getConnection();
-    const query = `Select Body from Document WHERE Id='${this.flags.id}'`;
+    const query = `Select Body from Document WHERE Id='${id}'`;
     // The type we are querying for
     interface Document {
       Body: string;
+    }
+    interface CreateResult {
+      id: string;
+      success: boolean;
+      errors: string[];
+      name: string;
+      message: string;
     }
     // Query the org
     const result = await conn.query<Document>(query);
@@ -63,18 +86,32 @@ export default class Org extends SfdxCommand {
     // Organization will always return one result, but this is an example of throwing an error
     // The output and --json will automatically be handled for you.
     if (!result.records || result.records.length <= 0) {
-      throw new SfdxError('Document not found');
+      // Document not found, insert new one.
+    } else {
+      // Document found, only upload new file!
+      const uploadUrl = result.records[0].Body;
+      this.ux.log(uploadUrl);
     }
-    // Document body always only returns one result
-    const url = result.records[0].Body;
-    /* tslint:disable */
-    const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
-    /* tslint:enable */
-    const gzipped = Buffer.from(res.toString(), 'base64');
-    const data = zlib.gunzipSync(gzipped);
-    fs.writeFileSync(`${this.flags.outputfile}`, data, {flag: 'w+'});
 
-    this.ux.log(`Successfully saved into ${this.flags.outputfile}`);
+    const formData = {
+      entity_content: {
+        value: '',
+        options: {
+          contentType: 'application/json'
+        }
+      },
+      Body: b64Data
+    };
+    /* tslint:disable */
+    const response = ((await conn.request({
+      url: `/services/data/v${conn.getApiVersion()}/sobjects/Document`,
+      formData,
+      method: 'POST'
+    } as any)) as unknown) as CreateResult;
+    /* tslint:enable */
+
+    this.ux.log(response.toString());
+    this.ux.log(`Successfully loaded from ${this.flags.inputfile}`);
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()};
   }

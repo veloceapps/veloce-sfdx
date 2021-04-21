@@ -78,14 +78,13 @@ export default class Org extends SfdxCommand {
     const upsert = this.flags.upsert || false;
 
     const fileContent = fs.readFileSync(this.flags.file);
-    let idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
-
+    let idmap;
     try {
-        idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
-      } catch (err) {
-        this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
-        idmap = {};
-      }
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+    } catch (err) {
+      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
+      idmap = {};
+    }
 
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
@@ -184,7 +183,7 @@ ${objects}
       currentBatch++;
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2) , {flag: 'w+'});
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
     if (!ok) {
       throw new SfdxError(output, 'ApexError');
     }

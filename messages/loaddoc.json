@@ -1,0 +1,6 @@
+{
+  "commandDescription": "Dumps data from Document in org",
+  "idFlagDescription": "id of document to upsert",
+  "idmapFlagDescription": "idmap.json file path, to store/load <Id:targetId> pairs",
+  "inputfileFlagDescription": "relative/full path to read Document from"
+}

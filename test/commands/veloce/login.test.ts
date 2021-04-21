@@ -1,7 +1,7 @@
 import {expect, test} from '@salesforce/command/lib/test';
 import {ensureJsonMap, ensureString} from '@salesforce/ts-types';
 
-describe('veloce:dumpdoc', () => {
+describe('veloce:login', () => {
   test
     .withOrg({username: 'test@org.com'}, true)
     .withConnectionRequest(request => {
@@ -17,8 +17,8 @@ describe('veloce:dumpdoc', () => {
       return Promise.resolve({records: []});
     })
     .stdout()
-    .command(['veloce:dumpdoc', '-i', '01521000000gHgnAAE', '--targetusername', 'test@org.com'])
-    .it('runs veloce:dumpdoc -i 01521000000gHgnAAE --targetusername test@org.com', ctx => {
+    .command(['veloce:login', '-u', 'username', '-p', './PASSWORDFILE', '-r', 'https://test.my.salesforce.com'])
+    .it('runs veloce:login -u username -p ./PASSWORDFILE -r https://test.my.salesforce.com', ctx => {
       expect(ctx.stdout).to.contain('');
     });
 });
