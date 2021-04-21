@@ -3,6 +3,7 @@ import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
 import {Tooling} from '@salesforce/core/lib/connection';
 import {AnyJson} from '@salesforce/ts-types';
 import {ensureJsonArray, ensureJsonMap, ensureString, isJsonArray, toJsonMap} from '@salesforce/ts-types';
+import 'ts-replace-all';
 import {Field, FieldType, SoqlQueryResult} from '../../shared/dataSoqlQueryTypes';
 
 /* tslint:disable */
@@ -123,9 +124,9 @@ export default class Org extends SfdxCommand {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
-              .replace('\'', '\\\'')
-              .replace('\n', '\\n')
-              .replace('\r', '\\r')}'`);
+              .replaceAll('\'', '\\\'')
+              .replaceAll('\n', '\\n')
+              .replaceAll('\r', '\\r')}'`);
           }
         }
         if (upsert) {
