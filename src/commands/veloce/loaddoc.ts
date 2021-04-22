@@ -151,7 +151,9 @@ export default class Org extends SfdxCommand {
         throw new SfdxError(`Failed to create document: ${JSON.stringify(response)}`);
       }
       // Store new ID in idmap
-      idmap[this.flags.id] = response.id;
+      if (this.flags.id != response.id) {
+        idmap[this.flags.id] = response.id;
+      }
     } else {
       // Document found, only upload new file!
       folderId = result.records[0].FolderId;
