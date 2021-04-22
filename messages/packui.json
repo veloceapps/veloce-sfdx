@@ -1,0 +1,7 @@
+{
+  "commandDescription": "Embeds attached files and creates self-contained json",
+  "inputdirFlagDescription": "input directory to read metadata.json and relative links",
+  "outputfileFlagDescription": "Output json file to create",
+  "modelnameFlagDescription": "Name of model (directory) to read metadata.json inside",
+  "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs"
+}
