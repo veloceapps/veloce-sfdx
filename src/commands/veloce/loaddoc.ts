@@ -75,7 +75,8 @@ export default class Org extends SfdxCommand {
     // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
     const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'});
     const gzipped = zlib.gzipSync(fdata);
-    const b64Data = gzipped.toString('base64');
+    // Encode to base64 TWICE!, first time is requirement of POST/PATCH, and it will be decoded on reads automatically by SF.
+    const b64Data = Buffer.from(gzipped.toString('base64')).toString('base64');
 
     const conn = this.org.getConnection();
 
