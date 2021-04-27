@@ -62,19 +62,23 @@ export default class Org extends SfdxCommand {
       }
       for (const section of metadata['sections']) {
         if (section['templateUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['templateUrl']}`);
+          this.ux.log(`CWD: ${process.cwd()}`)
+          this.ux.log(`${process.cwd()}: ${inputdir}/${section['templateUrl'].trim()}`)
+          const b = fs.readFileSync(`${inputdir}/${section['templateUrl'].trim()}`);
           const base64 = b.toString('base64');
           section['template'] = base64;
           delete section['templateUrl'];
         }
         if (section['scriptUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['scriptUrl']}`);
+          this.ux.log(`${process.cwd()}: ${inputdir}/${section['scriptUrl'].trim()}`)
+          const b = fs.readFileSync(`${inputdir}/${section['scriptUrl'].trim()}`);
           const base64 = b.toString('base64');
           section['script'] = base64;
           delete section['scriptUrl'];
         }
         if (section['stylesUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['stylesUrl']}`);
+          this.ux.log(`${process.cwd()}: ${inputdir}/${section['stylesUrl'].trim()}`)
+          const b = fs.readFileSync(`${inputdir}/${section['stylesUrl'].trim()}`);
           const base64 = b.toString('base64');
           section['styles'] = base64;
           delete section['stylesUrl'];
