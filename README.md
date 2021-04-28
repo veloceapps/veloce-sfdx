@@ -7,7 +7,7 @@ veloce sfdx plugin
 [![CircleCI](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master.svg?style=shield)](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master)
 [![Appveyor CI](https://ci.appveyor.com/api/projects/status/github/veloceapps/veloce-sfdx?branch=master&svg=true)](https://ci.appveyor.com/project/heroku/veloce-sfdx/branch/master)
 [![Codecov](https://codecov.io/gh/veloceapps/veloce-sfdx/branch/master/graph/badge.svg)](https://codecov.io/gh/veloceapps/veloce-sfdx)
-[![Greenkeeper](https://badges.greenkeeper.io/veloceapps/veloce-sfdx.svg)](https://greenkeeper.io/)
+[![Sneak](https://snyk.io/test/github/veloceapps/veloce-sfdx/badge.svg)](https://app.snyk.io/org/veloceapps/)
 [![Known Vulnerabilities](https://snyk.io/test/github/veloceapps/veloce-sfdx/badge.svg)](https://snyk.io/test/github/veloceapps/veloce-sfdx)
 [![Downloads/week](https://img.shields.io/npm/dw/veloce-sfdx.svg)](https://npmjs.org/package/veloce-sfdx)
 [![License](https://img.shields.io/npm/l/veloce-sfdx.svg)](https://github.com/veloceapps/veloce-sfdx/blob/master/package.json)
