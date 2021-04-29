@@ -7,6 +7,7 @@
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
   "boolFieldsFlagDescription": "Coma separated list of boolean fields",
+  "dateFieldsFlagDescription": "Coma separated list of date fields",
   "numericFieldsFlagDescription": "Coma separated list of boolean fields",
   "fileFlagDescription": "Full path to csv file"
 }

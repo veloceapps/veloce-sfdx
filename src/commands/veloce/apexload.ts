@@ -51,6 +51,7 @@ export default class Org extends SfdxCommand {
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
     boolfields: flags.string({char: 'B', description: messages.getMessage('boolFieldsFlagDescription')}),
+    datefields: flags.string({char: 'D', description: messages.getMessage('dateFieldsFlagDescription')}),
     numericfields: flags.string({char: 'N', description: messages.getMessage('numericFieldsFlagDescription')})
   };
 
@@ -74,6 +75,7 @@ export default class Org extends SfdxCommand {
       ignorefields.push('Id');
     }
     const boolfields = (this.flags.boolfields || '').split(',');
+    const datefields = (this.flags.datefields || '').split(',');
     const numericfields = (this.flags.numericfields || '').split(',');
 
     const upsert = this.flags.upsert || false;
@@ -126,6 +128,8 @@ export default class Org extends SfdxCommand {
             } else {
               fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
             }
+          } else if (datefields.includes(k)) {
+            fields.push(`${upsert ? '' : 'o.'}${k}=date.parse('${s}')`);
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
