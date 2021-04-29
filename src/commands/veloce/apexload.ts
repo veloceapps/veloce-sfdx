@@ -134,6 +134,7 @@ export default class Org extends SfdxCommand {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
+              .replaceAll('\\', '\\\\')
               .replaceAll('\'', '\\\'')
               .replaceAll('\n', '\\n')
               .replaceAll('\r', '\\r')}'`);
