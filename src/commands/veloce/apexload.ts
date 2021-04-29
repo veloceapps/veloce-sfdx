@@ -119,7 +119,13 @@ export default class Org extends SfdxCommand {
             s = m;
           }
           if (boolfields.includes(k)) {
-            fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
+            if (s === '1') {
+              fields.push(`${upsert ? '' : 'o.'}${k}=true`);
+            } else if (s === '0') {
+              fields.push(`${upsert ? '' : 'o.'}${k}=false`);
+            } else {
+              fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
+            }
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
