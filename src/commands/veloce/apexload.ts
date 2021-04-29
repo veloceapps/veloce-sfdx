@@ -129,7 +129,7 @@ export default class Org extends SfdxCommand {
               fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
             }
           } else if (datefields.includes(k)) {
-            fields.push(`${upsert ? '' : 'o.'}${k}=date.parse('${s}')`);
+            fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`);
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
