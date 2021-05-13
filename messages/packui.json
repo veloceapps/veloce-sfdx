@@ -1,5 +1,6 @@
 {
   "commandDescription": "Embeds attached files and creates self-contained json",
+  "pricelistidFlagDescription": "replace ALL references to pricelists in model with this ID",
   "inputdirFlagDescription": "input directory to read metadata.json and relative links",
   "outputfileFlagDescription": "Output json file to create",
   "modelnameFlagDescription": "Name of model (directory) to read metadata.json inside",
