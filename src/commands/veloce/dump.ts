@@ -134,11 +134,11 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
         this.ux.log(`QUERY: ${this.flags.id} => ${newId}`);
         this.flags.id = newId;
       }
-      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}'`;
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}' ORDER BY Name,Id`;
     } else if (this.flags.where) {
-      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE ${this.flags.where}`;
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE ${this.flags.where} ORDER BY Name,Id`;
     } else {
-      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`;
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} ORDER BY Name,Id`;
     }
 
     const result = await conn.autoFetchQuery(query, {autoFetch: true, maxFetch: 100000});
