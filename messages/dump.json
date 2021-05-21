@@ -1,6 +1,8 @@
 {
-  "commandDescription": "Dumps data from an org, using SOQL query",
-  "nameFlagDescription": "name to print",
-  "forceFlagDescription": "example boolean flag",
-  "errorNoOrgResults": "No results found for the org '%s'."
+  "commandDescription": "Dumps data from Object in org",
+  "idFlagDescription": "id of Object to dump",
+  "idmapFlagDescription": "idmap.json file path, to REVERSE map IDs from",
+  "fileFlagDescription": "relative/full path to file to write CSV into",
+  "sobjecttypeFlagDescription": "The sObject type of the records you want to dump.",
+  "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during dump"
 }

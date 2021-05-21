@@ -14,11 +14,11 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx veloce:load --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+  `$ sfdx veloce:load -f ./ myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
   Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   My hub org id is: 00Dxx000000001234
   `,
-  `$ sfdx veloce:load --name myname --targetusername myOrg@example.com
+  `$ sfdx veloce:load -f ./ myname.csv --targetusername myOrg@example.com
   Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   `
   ];
@@ -27,9 +27,7 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
-    file: flags.string({char: 'n', description: messages.getMessage('nameFlagDescription')}),
-    name: flags.string({char: 'n', description: messages.getMessage('nameFlagDescription')}),
-    force: flags.boolean({char: 'f', description: messages.getMessage('forceFlagDescription')})
+    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')}),
   };
 
   // Comment this out if your command does not require an org username

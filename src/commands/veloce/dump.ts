@@ -1,6 +1,10 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
+import {flags, SfdxCommand} from '@salesforce/command';
+import {Messages} from '@salesforce/core';
+import {AnyJson} from '@salesforce/ts-types';
+/* tslint:disable */
+const fs = require('fs');
+const csvWriter = require('csv-write-stream');
+/* tslint:enable */
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -9,16 +13,29 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'dump');
 
+// const SYSTEM_DATE_FIELDS = [
+//   'CreatedDate',
+//   'LastModifiedDate',
+//   'SystemModstamp',
+//   'LastViewedDate',
+//   'LastReferencedDate',
+// ];
+// based on this: https://github.com/salesforcecli/data/tree/main/packages/plugin-data/src/commands/force/data
+
+/*
+
+*/
+
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx veloce:dump --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+    `$ sfdx veloce:dump -s Product2 -i 00Dxx000000001234 --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
   Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   My hub org id is: 00Dxx000000001234
   `,
-  `$ sfdx veloce:dump --name myname --targetusername myOrg@example.com
+    `$ sfdx veloce:dump -s Product2 -i 00Dxx000000001234 --targetusername myOrg@example.com
   Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   `
   ];
@@ -26,9 +43,23 @@ export default class Org extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: messages.getMessage('nameFlagDescription')}),
-    force: flags.boolean({char: 'f', description: messages.getMessage('forceFlagDescription')})
+    id: flags.string({
+      char: 'i',
+      description: messages.getMessage('idFlagDescription'),
+      required: true
+    }),
+    sobjecttype: flags.string({
+      char: 's',
+      description: messages.getMessage('sobjecttypeFlagDescription'),
+      required: true
+    }),
+    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
+    file: flags.string({
+      char: 'f',
+      description: messages.getMessage('fileFlagDescription'),
+      required: true
+    }),
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
   };
 
   // Comment this out if your command does not require an org username
@@ -41,49 +72,70 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const name = this.flags.name || 'world';
+    const lookupFields = []
+    const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived','LastViewedDate','LastReferencedDate','UserRecordAccessId', 'OwnerId']
+    let idmap : { [key:string]:string; };
+    try {
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+    } catch (err) {
+      this.ux.log(`No ID-Map file: ${this.flags.idmap} will not perform reverse-id map!`);
+      idmap = {};
+    }
+    const reverseIdmap : { [key:string]:string; } = {}
+    for (let [key, value] of Object.entries(idmap)) {
+      reverseIdmap[value] = key
+    }
 
-    // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
+
+    const writer = csvWriter({
+      separator: ',',
+      newline: '\n',
+      headers: undefined,
+      sendHeaders: true,
+      bom: true
+    })
+    writer.pipe(fs.createWriteStream(this.flags.file))
+
+    const fields = []
     const conn = this.org.getConnection();
-    const query = 'Select Name, TrialExpirationDate from Organization';
+    const fieldsResult = await conn.autoFetchQuery(`
+SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
+    `, {autoFetch: true, maxFetch: 50000});
 
-    // The type we are querying for
-    interface Organization {
-      Name: string;
-      TrialExpirationDate: string;
+    for (const f of fieldsResult.records) {
+      const apiName = f['QualifiedApiName']
+      const datatype = f['DataType']
+      if (datatype.includes('Formula') || ignoreFields.includes(apiName)) {
+        continue
+      }
+      if (datatype.includes('Lookup')) {
+        lookupFields.push(apiName)
+      }
+      fields.push(apiName)
     }
+    const query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`
 
-    // Query the org
-    const result = await conn.query<Organization>(query);
-
-    // Organization will always return one result, but this is an example of throwing an error
-    // The output and --json will automatically be handled for you.
-    if (!result.records || result.records.length <= 0) {
-      throw new SfdxError(messages.getMessage('errorNoOrgResults', [this.org.getOrgId()]));
+    const result = await conn.autoFetchQuery(query, { autoFetch: true, maxFetch: 100000 });
+    this.ux.log(`Query complete with ${result.totalSize} records returned`);
+    if (result.totalSize) {
+      for (const r of result.records) {
+        delete r['attributes']
+        // reverse map Ids
+        for (const f of lookupFields) {
+          const newId = reverseIdmap[r[f]]
+          if(r[f] && newId) {
+            // Reverse mapping IDs
+            this.ux.log(`${r[f]} => ${newId}`)
+            r[f] = newId
+          }
+        }
+        writer.write(r)
+      }
     }
-
-    // Organization always only returns one result
-    const orgName = result.records[0].Name;
-    const trialExpirationDate = result.records[0].TrialExpirationDate;
-
-    let outputString = `Hello ${name}! This is org: ${orgName}`;
-    if (trialExpirationDate) {
-      const date = new Date(trialExpirationDate).toDateString();
-      outputString = `${outputString} and I will be around until ${date}!`;
-    }
-    this.ux.log(outputString);
-
-    // this.hubOrg is NOT guaranteed because supportsHubOrgUsername=true, as opposed to requiresHubOrgUsername.
-    if (this.hubOrg) {
-      const hubOrgId = this.hubOrg.getOrgId();
-      this.ux.log(`My hub org id is: ${hubOrgId}`);
-    }
-
-    if (this.flags.force && this.args.file) {
-      this.ux.log(`You input --force and a file: ${this.args.file}`);
-    }
-
+    writer.end()
     // Return an object to be displayed with --json
-    return { orgId: this.org.getOrgId(), outputString };
+    return {};
   }
 }
