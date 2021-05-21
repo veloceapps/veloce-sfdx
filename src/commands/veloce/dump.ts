@@ -85,7 +85,10 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     const idReplaceFields = (this.flags.idreplacefields || '').split(',');
     const lookupFields = [];
-    const onlyFields = (this.args.fields || '').split(',');
+    const onlyFields = []
+    for (const f of (this.args.fields || '').split(',')) {
+      onlyFields.push(f.trim().toLowerCase())
+    }
     const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
     let idmap: { [key: string]: string; };
     try {
@@ -120,7 +123,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
       const apiName = f['QualifiedApiName'];
       const datatype = f['DataType'];
       if (datatype.includes('Formula') || ignoreFields.includes(apiName) ||
-        (onlyFields.length > 0 && !onlyFields.includes(apiName))) {
+        (onlyFields.length > 0 && !onlyFields.includes(apiName.trim().toLowerCase()))) {
         continue;
       }
       if (datatype.includes('Lookup')) {
