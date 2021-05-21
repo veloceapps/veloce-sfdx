@@ -120,7 +120,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
       const apiName = f['QualifiedApiName'];
       const datatype = f['DataType'];
       if (datatype.includes('Formula') || ignoreFields.includes(apiName) ||
-        (onlyFields.length > 0 && onlyFields.includes(apiName))) {
+        (onlyFields.length > 0 && !onlyFields.includes(apiName))) {
         continue;
       }
       if (datatype.includes('Lookup')) {
