@@ -159,7 +159,6 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
         }
         for (const [key, value] of Object.entries(r)) {
           if (idReplaceFields.includes(key)) {
-            this.ux.log(`Search and replace IDs in field: ${key}`);
             let s = '' + value;
             for (const [k, v] of Object.entries(reverseIdmap)) {
               const olds = s;

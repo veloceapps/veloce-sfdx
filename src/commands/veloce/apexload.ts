@@ -121,7 +121,6 @@ export default class Org extends SfdxCommand {
             continue;
           }
           if (idReplaceFields.includes(k)) {
-            this.ux.log(`Search and replace IDs in field: ${k}`);
             for (const [key, v] of Object.entries(idmap)) {
               const olds = s;
               s = olds.replaceAll(key, v as string);
