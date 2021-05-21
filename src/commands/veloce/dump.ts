@@ -48,6 +48,11 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('idFlagDescription'),
       required: false
     }),
+    fields: flags.string({
+      char: 'F',
+      description: messages.getMessage('fieldsFlagDescription'),
+      required: false
+    }),
     where: flags.string({
       char: 'w',
       description: messages.getMessage('whereFlagDescription'),
@@ -78,6 +83,7 @@ export default class Org extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     const lookupFields = [];
+    const onlyFields = (this.args.fields || '').split(',');
     const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
     let idmap: { [key: string]: string; };
     try {
@@ -111,7 +117,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
     for (const f of fieldsResult.records) {
       const apiName = f['QualifiedApiName'];
       const datatype = f['DataType'];
-      if (datatype.includes('Formula') || ignoreFields.includes(apiName)) {
+      if (datatype.includes('Formula') || ignoreFields.includes(apiName) ||
+        (onlyFields.length > 0 && onlyFields.includes(apiName))) {
         continue;
       }
       if (datatype.includes('Lookup')) {
