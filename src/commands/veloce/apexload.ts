@@ -45,6 +45,8 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('externalidFlagDescription'),
       required: true
     }),
+    idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false}),
+
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
@@ -71,6 +73,8 @@ export default class Org extends SfdxCommand {
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
     const ignorefields = (this.flags.ignorefields || '').split(',');
+    const idReplaceFields = (this.flags.idreplacefields || '').split(',');
+
     if (!ignorefields.includes('Id')) {
       ignorefields.push('Id');
     }
@@ -115,6 +119,16 @@ export default class Org extends SfdxCommand {
           let s = '' + value;
           if (s === '' || ignorefields.includes(k)) {
             continue;
+          }
+          if (idReplaceFields.includes(k)) {
+            this.ux.log(`Search and eplace IDs in field: ${k}`);
+            for (const [key, v] of Object.entries(idmap)) {
+              const olds = s;
+              s = olds.replaceAll(key, v as string);
+              if (olds !== s) {
+                this.ux.log(`${key} => ${v}`);
+              }
+            }
           }
           const m = idmap[s];
           if (k !== extId && m) { // dont map ExternalID column!
