@@ -83,14 +83,15 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const idReplaceFields = (this.flags.idreplacefields || '').split(',');
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
     const lookupFields = [];
     const onlyFields = []
-
-    this.ux.log(`fields=${this.flags.onlyfields}`)
-    for (const f of (this.flags.onlyfields || '').split(',')) {
-      onlyFields.push(f.trim().toLowerCase())
+    if(this.flags.onlyfields) {
+      for (const f of this.flags.onlyfields.split(',')) {
+        onlyFields.push(f.trim().toLowerCase())
+      }
     }
+
     const ignoreFields = this.flags.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
     let idmap: { [key: string]: string; };
     try {

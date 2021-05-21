@@ -72,15 +72,15 @@ export default class Org extends SfdxCommand {
     const batchSize = parseInt(this.flags.batch || 10, 10);
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
-    const ignorefields = (this.flags.ignorefields || '').split(',');
-    const idReplaceFields = (this.flags.idreplacefields || '').split(',');
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
 
     if (!ignorefields.includes('Id')) {
       ignorefields.push('Id');
     }
-    const boolfields = (this.flags.boolfields || '').split(',');
-    const datefields = (this.flags.datefields || '').split(',');
-    const numericfields = (this.flags.numericfields || '').split(',');
+    const boolfields = this.flags.boolfields ? this.flags.boolfields.split(',') : [];
+    const datefields = this.flags.datefields ? this.flags.datefields.split(',') : [];
+    const numericfields = this.flags.numericfields ? this.flags.numericfields.split(',') : [];
 
     const upsert = this.flags.upsert || false;
 
