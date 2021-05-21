@@ -46,7 +46,7 @@ export default class Org extends SfdxCommand {
     id: flags.string({
       char: 'i',
       description: messages.getMessage('idFlagDescription'),
-      required: true
+      required: false
     }),
     sobjecttype: flags.string({
       char: 's',
@@ -115,7 +115,18 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
       }
       fields.push(apiName)
     }
-    const query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`
+    let query
+    if (this.flags.id) {
+      const newId = reverseIdmap[this.flags.id]
+      if(newId) {
+        // Reverse mapping IDs
+        this.ux.log(`QUERY: ${this.flags.id} => ${newId}`)
+        this.flags.id = newId
+      }
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}'`
+    } else {
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`
+    }
 
     const result = await conn.autoFetchQuery(query, { autoFetch: true, maxFetch: 100000 });
     this.ux.log(`Query complete with ${result.totalSize} records returned`);
