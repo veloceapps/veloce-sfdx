@@ -48,9 +48,9 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('idFlagDescription'),
       required: false
     }),
-    fields: flags.string({
+    onlyfields: flags.string({
       char: 'F',
-      description: messages.getMessage('fieldsFlagDescription'),
+      description: messages.getMessage('onlyfieldsFlagDescription'),
       required: false
     }),
     where: flags.string({
@@ -87,11 +87,11 @@ export default class Org extends SfdxCommand {
     const lookupFields = [];
     const onlyFields = []
 
-    this.ux.log(`fields=${this.flags.fields}`)
-    for (const f of (this.flags.fields || '').split(',')) {
+    this.ux.log(`fields=${this.flags.onlyfields}`)
+    for (const f of (this.flags.onlyfields || '').split(',')) {
       onlyFields.push(f.trim().toLowerCase())
     }
-    const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
+    const ignoreFields = this.flags.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
     let idmap: { [key: string]: string; };
     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
