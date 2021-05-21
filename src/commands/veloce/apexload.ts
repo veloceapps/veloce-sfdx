@@ -121,12 +121,12 @@ export default class Org extends SfdxCommand {
             continue;
           }
           if (idReplaceFields.includes(k)) {
-            this.ux.log(`Search and eplace IDs in field: ${k}`);
+            this.ux.log(`Search and replace IDs in field: ${k}`);
             for (const [key, v] of Object.entries(idmap)) {
               const olds = s;
               s = olds.replaceAll(key, v as string);
               if (olds !== s) {
-                this.ux.log(`${key} => ${v}`);
+                this.ux.log(`CONTENT: ${key} => ${v}`);
               }
             }
           }

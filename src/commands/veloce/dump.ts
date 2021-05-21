@@ -69,7 +69,8 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('fileFlagDescription'),
       required: true
     }),
-    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')})
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
+    idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false})
   };
 
   // Comment this out if your command does not require an org username
@@ -82,6 +83,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
+    const idReplaceFields = (this.flags.idreplacefields || '').split(',');
     const lookupFields = [];
     const onlyFields = (this.args.fields || '').split(',');
     const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
@@ -155,6 +157,21 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
             r[f] = newId;
           }
         }
+        for (const [key, value] of Object.entries(r)) {
+          if (idReplaceFields.includes(key)) {
+            this.ux.log(`Search and replace IDs in field: ${key}`);
+            let s = '' + value;
+            for (const [k, v] of Object.entries(reverseIdmap)) {
+              const olds = s;
+              s = olds.replaceAll(k, v as string);
+              if (olds !== s) {
+                this.ux.log(`CONTENT: ${k} => ${v}`);
+              }
+            }
+            r[key] = s;
+          }
+        }
+
         writer.write(r);
       }
     }
