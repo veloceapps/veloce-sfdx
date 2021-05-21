@@ -59,7 +59,7 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('fileFlagDescription'),
       required: true
     }),
-    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -72,20 +72,19 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const lookupFields = []
-    const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived','LastViewedDate','LastReferencedDate','UserRecordAccessId', 'OwnerId']
-    let idmap : { [key:string]:string; };
+    const lookupFields = [];
+    const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
+    let idmap: { [key: string]: string; };
     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
     } catch (err) {
       this.ux.log(`No ID-Map file: ${this.flags.idmap} will not perform reverse-id map!`);
       idmap = {};
     }
-    const reverseIdmap : { [key:string]:string; } = {}
-    for (let [key, value] of Object.entries(idmap)) {
-      reverseIdmap[value] = key
+    const reverseIdmap: { [key: string]: string; } = {};
+    for (const [key, value] of Object.entries(idmap)) {
+      reverseIdmap[value] = key;
     }
-
 
     const writer = csvWriter({
       separator: ',',
@@ -93,10 +92,10 @@ export default class Org extends SfdxCommand {
       headers: undefined,
       sendHeaders: true,
       bom: true
-    })
-    writer.pipe(fs.createWriteStream(this.flags.file))
+    });
+    writer.pipe(fs.createWriteStream(this.flags.file));
 
-    const fields = []
+    const fields = [];
     const conn = this.org.getConnection();
     const fieldsResult = await conn.autoFetchQuery(`
 SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
@@ -105,47 +104,47 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
     `, {autoFetch: true, maxFetch: 50000});
 
     for (const f of fieldsResult.records) {
-      const apiName = f['QualifiedApiName']
-      const datatype = f['DataType']
+      const apiName = f['QualifiedApiName'];
+      const datatype = f['DataType'];
       if (datatype.includes('Formula') || ignoreFields.includes(apiName)) {
-        continue
+        continue;
       }
       if (datatype.includes('Lookup')) {
-        lookupFields.push(apiName)
+        lookupFields.push(apiName);
       }
-      fields.push(apiName)
+      fields.push(apiName);
     }
-    let query
+    let query;
     if (this.flags.id) {
-      const newId = reverseIdmap[this.flags.id]
-      if(newId) {
+      const newId = reverseIdmap[this.flags.id];
+      if (newId) {
         // Reverse mapping IDs
-        this.ux.log(`QUERY: ${this.flags.id} => ${newId}`)
-        this.flags.id = newId
+        this.ux.log(`QUERY: ${this.flags.id} => ${newId}`);
+        this.flags.id = newId;
       }
-      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}'`
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}'`;
     } else {
-      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`;
     }
 
     const result = await conn.autoFetchQuery(query, { autoFetch: true, maxFetch: 100000 });
     this.ux.log(`Query complete with ${result.totalSize} records returned`);
     if (result.totalSize) {
       for (const r of result.records) {
-        delete r['attributes']
+        delete r['attributes'];
         // reverse map Ids
         for (const f of lookupFields) {
-          const newId = reverseIdmap[r[f]]
-          if(r[f] && newId) {
+          const newId = reverseIdmap[r[f]];
+          if (r[f] && newId) {
             // Reverse mapping IDs
-            this.ux.log(`${r[f]} => ${newId}`)
-            r[f] = newId
+            this.ux.log(`${r[f]} => ${newId}`);
+            r[f] = newId;
           }
         }
-        writer.write(r)
+        writer.write(r);
       }
     }
-    writer.end()
+    writer.end();
     // Return an object to be displayed with --json
     return {};
   }

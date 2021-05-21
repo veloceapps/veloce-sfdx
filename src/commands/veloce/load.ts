@@ -27,7 +27,7 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
-    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')}),
+    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
