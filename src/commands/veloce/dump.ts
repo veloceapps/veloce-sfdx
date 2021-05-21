@@ -86,7 +86,9 @@ export default class Org extends SfdxCommand {
     const idReplaceFields = (this.flags.idreplacefields || '').split(',');
     const lookupFields = [];
     const onlyFields = []
-    for (const f of (this.args.fields || '').split(',')) {
+
+    this.ux.log(`fields=${this.flags.fields}`)
+    for (const f of (this.flags.fields || '').split(',')) {
       onlyFields.push(f.trim().toLowerCase())
     }
     const ignoreFields = this.args.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
