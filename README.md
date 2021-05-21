@@ -31,7 +31,7 @@ USAGE
 <!-- usagestop -->
 <!-- commands -->
 * [`sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceapexload--s-string--i-string--f-string--i-string--r-string--u--o-string--b-string--b-string--d-string--n-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-* [`sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedump--s-string--i-string--f-string--i-string--f-string--w-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-R <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedump--s-string--i-string--f-string--i-string--f-string--w-string--o-string--r-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:dumpdoc -i <string> -o <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedumpdoc--i-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:load [-f <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceload--f-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:loaddoc -I <string> -i <string> -n <string> -F <string> -f <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceloaddoc--i-string--i-string--n-string--f-string--f-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
@@ -105,7 +105,7 @@ EXAMPLE
 
 _See code: [lib/commands/veloce/apexload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.21/lib/commands/veloce/apexload.js)_
 
-## `sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-R <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 Dumps data from Object in org
 
@@ -113,8 +113,8 @@ Dumps data from Object in org
 Dumps data from Object in org
 
 USAGE
-  $ sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-v 
-  <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
+  $ sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-F <string>] [-w <string>] [-o <string>] [-R 
+  <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel 
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
@@ -123,6 +123,10 @@ OPTIONS
 
   -I, --idmap=idmap                                                                 (required) idmap.json file path, to
                                                                                     REVERSE map IDs from
+
+  -R, --idreplacefields=idreplacefields                                             Coma separated list of fields in
+                                                                                    which SF IDs are replaces by mapped
+                                                                                    Ids by using text search and replace
 
   -f, --file=file                                                                   (required) relative/full path to
                                                                                     file to write CSV into
