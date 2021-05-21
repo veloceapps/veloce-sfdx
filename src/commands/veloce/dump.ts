@@ -48,6 +48,11 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('idFlagDescription'),
       required: false
     }),
+    where: flags.string({
+      char: 'w',
+      description: messages.getMessage('whereFlagDescription'),
+      required: false
+    }),
     sobjecttype: flags.string({
       char: 's',
       description: messages.getMessage('sobjecttypeFlagDescription'),
@@ -123,11 +128,13 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
         this.flags.id = newId;
       }
       query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE Id = '${this.flags.id}'`;
+    } else if (this.flags.where) {
+      query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype} WHERE ${this.flags.where}`;
     } else {
       query = `SELECT ${fields.join(',')} FROM ${this.flags.sobjecttype}`;
     }
 
-    const result = await conn.autoFetchQuery(query, { autoFetch: true, maxFetch: 100000 });
+    const result = await conn.autoFetchQuery(query, {autoFetch: true, maxFetch: 100000});
     this.ux.log(`Query complete with ${result.totalSize} records returned`);
     if (result.totalSize) {
       for (const r of result.records) {

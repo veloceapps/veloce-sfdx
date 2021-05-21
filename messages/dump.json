@@ -1,6 +1,7 @@
 {
   "commandDescription": "Dumps data from Object in org",
   "idFlagDescription": "id of Object to dump",
+  "whereFlagDescription": "where condition to filter sObjects by",
   "idmapFlagDescription": "idmap.json file path, to REVERSE map IDs from",
   "fileFlagDescription": "relative/full path to file to write CSV into",
   "sobjecttypeFlagDescription": "The sObject type of the records you want to dump.",
