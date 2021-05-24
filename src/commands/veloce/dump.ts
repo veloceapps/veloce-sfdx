@@ -85,10 +85,10 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
     const lookupFields = [];
-    const onlyFields = []
-    if(this.flags.onlyfields) {
+    const onlyFields = [];
+    if (this.flags.onlyfields) {
       for (const f of this.flags.onlyfields.split(',')) {
-        onlyFields.push(f.trim().toLowerCase())
+        onlyFields.push(f.trim().toLowerCase());
       }
     }
 

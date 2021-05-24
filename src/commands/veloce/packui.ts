@@ -38,7 +38,6 @@ export default class Org extends SfdxCommand {
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
-
   public async run(): Promise<AnyJson> {
     const inputdir = this.flags.inputdir || '.';
     const modelname = this.flags.modelname || 'CPQ';
@@ -75,19 +74,25 @@ export default class Org extends SfdxCommand {
       }
       for (const section of metadata['sections']) {
         if (section['templateUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['templateUrl'].trim()}`);
+          const p = `${inputdir}/${section['templateUrl'].trim()}`;
+          this.assertPath(p);
+          const b = fs.readFileSync(p);
           const base64 = b.toString('base64');
           section['template'] = base64;
           delete section['templateUrl'];
         }
         if (section['scriptUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['scriptUrl'].trim()}`);
+          const p = `${inputdir}/${section['scriptUrl'].trim()}`;
+          this.assertPath(p);
+          const b = fs.readFileSync(p);
           const base64 = b.toString('base64');
           section['script'] = base64;
           delete section['scriptUrl'];
         }
         if (section['stylesUrl']) {
-          const b = fs.readFileSync(`${inputdir}/${section['stylesUrl'].trim()}`);
+          const p = `${inputdir}/${section['stylesUrl'].trim()}`;
+          this.assertPath(p);
+          const b = fs.readFileSync(p);
           const base64 = b.toString('base64');
           section['styles'] = base64;
           delete section['stylesUrl'];
@@ -99,5 +104,15 @@ export default class Org extends SfdxCommand {
     this.ux.log(`Data successfully packed into: ${outputfile}`);
     // Return an object to be displayed with --json
     return { inputdir, modelname, outputfile};
+  }
+
+  private assertPath(p: string) {
+    for (const part of p.split('/')) {
+      if (part.startsWith(' ') || part.endsWith(' ') ||
+        part.startsWith('\t') || part.endsWith('\t')) {
+        this.ux.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`);
+        process.exit(255);
+      }
+    }
   }
 }
