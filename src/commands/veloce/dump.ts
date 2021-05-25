@@ -119,7 +119,7 @@ export default class Org extends SfdxCommand {
     const fieldsResult = await conn.autoFetchQuery(`
 SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
 FROM FieldDefinition
-WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
+WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000});
 
     for (const f of fieldsResult.records) {
