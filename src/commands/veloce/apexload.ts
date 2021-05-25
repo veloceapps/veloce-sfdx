@@ -222,7 +222,7 @@ ${objects}
             idmap[extId2OldId[r[extId]]] = r.Id;
           }
         } else {
-          throw new SfdxError(`Cannot insert id map record (missing srcId/targetId), ${extId}=${r[extId]}: ${extId2OldId[r[extId]]} => ${r.Id}`, 'ApexError');
+          this.ux.log(`MISSING => ${r.Id}`);
         }
       });
       /* tslint:enable */
