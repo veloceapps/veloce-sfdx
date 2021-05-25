@@ -33,7 +33,8 @@ export default class Org extends SfdxCommand {
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')}),
-    sobjecttypes: flags.string({char: 's', description: messages.getMessage('sobjecttypesFlagDescription')})
+    sobjecttypes: flags.string({char: 's', description: messages.getMessage('sobjecttypesFlagDescription')}),
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -46,6 +47,8 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.splice(',') : [];
+
     const sobjecttypess = this.flags.sobjecttypes ? this.flags.sobjecttypes.split(',') : [];
     if (!sobjecttypess.length) {
       this.ux.log('At least one sobjecttype is required!');
@@ -118,7 +121,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY Qualified
     `, {autoFetch: true, maxFetch: 50000});
       for (const f of fieldsResult.records) {
         const apiName = f['QualifiedApiName'];
-        if (!apiName.endsWith('__c')) { // only custom fields!
+        if (!apiName.endsWith('__c') || ignorefields.includes(apiName)) { // only custom fields!
           continue;
         }
         // const datatype = f['DataType'];

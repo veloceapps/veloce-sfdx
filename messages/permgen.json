@@ -1,5 +1,6 @@
 {
   "commandDescription": "Load data into org, by use of standard Salesforce API",
   "fileFlagDescription": "csv file to load into salesforce",
-  "sobjecttypesFlagDescription": "Coma separated lists of sObject types of the records you want to upsert."
+  "sobjecttypesFlagDescription": "Coma separated lists of sObject types of the records you want to upsert.",
+  "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during generation"
 }
