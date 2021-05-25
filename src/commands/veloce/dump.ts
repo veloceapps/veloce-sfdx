@@ -92,7 +92,7 @@ export default class Org extends SfdxCommand {
       }
     }
 
-    const ignoreFields = this.flags.ignorefields?.split(',') || ['IsActive', 'CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
+    const ignoreFields = this.flags.ignorefields?.split(',') || ['CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
     let idmap: { [key: string]: string; };
     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
