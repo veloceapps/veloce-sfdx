@@ -34,7 +34,7 @@ export default class Org extends SfdxCommand {
     // flag with a value (-n, --name=VALUE)
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')}),
     sobjecttypes: flags.string({char: 's', description: messages.getMessage('sobjecttypesFlagDescription')}),
-    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')})
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription'), required: false})
   };
 
   // Comment this out if your command does not require an org username
