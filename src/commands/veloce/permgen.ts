@@ -47,7 +47,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.splice(',') : [];
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
 
     const sobjecttypess = this.flags.sobjecttypes ? this.flags.sobjecttypes.split(',') : [];
     if (!sobjecttypess.length) {
