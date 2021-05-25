@@ -93,6 +93,26 @@ export default class Org extends SfdxCommand {
       idmap = {};
     }
 
+    // retrieve types of args
+    const conn = this.org.getConnection();
+    const fieldsResult = await conn.autoFetchQuery(`
+SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
+    `, {autoFetch: true, maxFetch: 50000});
+
+    for (const f of fieldsResult.records) {
+      const apiName = f['QualifiedApiName'];
+      const datatype = f['DataType'];
+      if (datatype.includes('Formula')) {
+        ignorefields.push(apiName);
+      } else if (datatype.includes('Checkbox')) {
+        boolfields.push(apiName);
+      } else if (datatype.includes('Number') || datatype.includes('Percent') || datatype.includes('Currency')) {
+        numericfields.push(apiName);
+      }
+    }
+
     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
@@ -176,7 +196,6 @@ ${objects}
 `;
       }
 
-      const conn = this.org.getConnection();
       const exec = new apexNode.ExecuteService(conn);
       const execAnonOptions = Object.assign({}, {apexCode: script});
       const result = await exec.executeAnonymous(execAnonOptions);
