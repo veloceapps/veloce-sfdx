@@ -110,6 +110,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         boolfields.push(apiName);
       } else if (datatype.includes('Number') || datatype.includes('Percent') || datatype.includes('Currency')) {
         numericfields.push(apiName);
+      } else if (datatype.includes('Date')) {
+        datefields.push(apiName);
       }
     }
 
