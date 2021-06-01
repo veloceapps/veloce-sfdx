@@ -48,6 +48,11 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('idFlagDescription'),
       required: false
     }),
+    append: flags.boolean({
+      char: 'A',
+      description: messages.getMessage('appendFlagDescription'),
+      required: false
+    }),
     onlyfields: flags.string({
       char: 'F',
       description: messages.getMessage('onlyfieldsFlagDescription'),
@@ -109,10 +114,10 @@ export default class Org extends SfdxCommand {
       separator: ',',
       newline: '\n',
       headers: undefined,
-      sendHeaders: true,
+      sendHeaders: !this.flags.append,
       bom: true
     });
-    writer.pipe(fs.createWriteStream(this.flags.file));
+    writer.pipe(fs.createWriteStream(this.flags.file, {flags: this.flags.append ? 'a+' : 'w+'}));
 
     const fields = [];
     const conn = this.org.getConnection();

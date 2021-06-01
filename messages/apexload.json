@@ -10,5 +10,6 @@
   "dateFieldsFlagDescription": "Coma separated list of date fields",
   "numericFieldsFlagDescription": "Coma separated list of boolean fields",
   "idreplacefieldsFlagDescription": "Coma separated list of fields in which SF IDs are replaces by mapped Ids by using text search and replace",
-  "fileFlagDescription": "Full path to csv file"
+  "fileFlagDescription": "Full path to csv file",
+  "printidsFlagDescription": "Print External ID before attempting to update"
 }

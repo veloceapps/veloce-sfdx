@@ -47,6 +47,7 @@ export default class Org extends SfdxCommand {
     }),
     idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false}),
 
+    printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
@@ -178,6 +179,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         if (upsert) {
           objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
         } else {
+          if (this.flags.printids) {
+            this.ux.log(`ID: ${extId} = ${r[extId]}`);
+          }
           objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`;
           objects += `${fields.join(';')};\n`;
           objects += 'update o;\n';
@@ -216,11 +220,9 @@ ${objects}
       }
       /* tslint:disable */
       queryResult.result.records.forEach((r: any) => {
-        if (extId2OldId[r[extId]] != r.Id) {
-          this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
-        }
         if (extId2OldId[r[extId]] && r.Id) {
           if (extId2OldId[r[extId]] != r.Id) {
+            this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
             idmap[extId2OldId[r[extId]]] = r.Id;
           }
         } else {
