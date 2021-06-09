@@ -79,6 +79,9 @@ export default class Org extends SfdxCommand {
     if (!ignorefields.includes('Id')) {
       ignorefields.push('Id');
     }
+    if (!ignorefields.includes(extId)) {
+      ignorefields.push(extId);
+    }
     const boolfields = this.flags.boolfields ? this.flags.boolfields.split(',') : [];
     const datefields = this.flags.datefields ? this.flags.datefields.split(',') : [];
     const numericfields = this.flags.numericfields ? this.flags.numericfields.split(',') : [];
@@ -130,6 +133,13 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         if (!r[extId]) {
           this.ux.log(`${r.Id}: Auto-populating ${extId} with ${r.Id}`);
           r[extId] = r.Id;
+          // remove external ID from ignore fields
+          if (ignorefields.includes(extId)) {
+            const index = ignorefields.indexOf(extId);
+            if (index > -1) {
+              ignorefields.splice(index, 1);
+            }
+          }
         }
         ids.push(r[extId]);
         extId2OldId[r[extId]] = r.Id;
