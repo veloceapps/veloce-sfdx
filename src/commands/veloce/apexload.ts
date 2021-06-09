@@ -75,18 +75,18 @@ export default class Org extends SfdxCommand {
     const extId = this.flags.externalid;
     const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
+    const upsert = this.flags.upsert || false;
 
     if (!ignorefields.includes('Id')) {
       ignorefields.push('Id');
     }
-    if (!ignorefields.includes(extId)) {
+    if (!ignorefields.includes(extId) && !upsert) {
       ignorefields.push(extId);
     }
     const boolfields = this.flags.boolfields ? this.flags.boolfields.split(',') : [];
     const datefields = this.flags.datefields ? this.flags.datefields.split(',') : [];
     const numericfields = this.flags.numericfields ? this.flags.numericfields.split(',') : [];
 
-    const upsert = this.flags.upsert || false;
 
     const fileContent = fs.readFileSync(this.flags.file);
     let idmap;
