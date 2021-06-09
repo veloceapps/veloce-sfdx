@@ -87,7 +87,6 @@ export default class Org extends SfdxCommand {
     const datefields = this.flags.datefields ? this.flags.datefields.split(',') : [];
     const numericfields = this.flags.numericfields ? this.flags.numericfields.split(',') : [];
 
-
     const fileContent = fs.readFileSync(this.flags.file);
     let idmap;
     try {
