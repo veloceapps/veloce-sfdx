@@ -309,7 +309,7 @@ OPTIONS
   -I, --idmap=idmap                                                                 (required) idmap.json file path, to
                                                                                     store/load <Id:targetId> pairs
 
-  -f, --inputdir=inputdir                                                           (required) relative/full path to
+  -f, --inputfile=inputfile                                                         (required) relative/full path to
                                                                                     read Document from
 
   -i, --id=id                                                                       (required) id of document to upsert
