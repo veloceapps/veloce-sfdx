@@ -2,8 +2,8 @@ import {flags, SfdxCommand} from '@salesforce/command';
 import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
 import {Tooling} from '@salesforce/core/lib/connection';
 import {AnyJson} from '@salesforce/ts-types';
+import {QueryResult} from 'jsforce';
 import 'ts-replace-all';
-import {QueryResult} from "jsforce";
 
 /* tslint:disable */
 const apexNode = require('@salesforce/apex-node');
@@ -222,7 +222,7 @@ ${objects}
       }
       // Query back Ids
       const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
-      const queryResult: QueryResult<any> = await this.runSoqlQuery(conn, query, this.logger);
+      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger);
       if (!queryResult.done) {
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
       }
@@ -251,7 +251,7 @@ ${objects}
   }
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
-  ): Promise<QueryResult<any>> {
+  ): Promise<QueryResult<unknown>> {
     logger.debug('running query');
 
     const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000});
@@ -262,7 +262,7 @@ ${objects}
     // remove nextRecordsUrl and force done to true
     delete result.nextRecordsUrl;
     result.done = true;
-    return result
+    return result;
   }
 
   private formatDefault(response) {
