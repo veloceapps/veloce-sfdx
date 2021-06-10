@@ -1,0 +1,7 @@
+{
+  "commandDescription": "Create configuration csv from files",
+  "templatefileFlagDescription": "Template csv with placeholders",
+  "inputdirFlagDescription": "Input directory to read property files",
+  "outputfileFlagDescription": "Output csv configuration file to create",
+  "modelnameFlagDescription": "Name of model (directory) to read metadata.json inside"
+}
