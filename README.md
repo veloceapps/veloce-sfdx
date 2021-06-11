@@ -22,7 +22,7 @@ $ npm install -g veloce-sfdx
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-veloce-sfdx/1.0.40 darwin-x64 node-v15.9.0
+veloce-sfdx/1.0.40 darwin-x64 node-v15.14.0
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -145,6 +145,7 @@ EXAMPLE
 ```
 
 _See code: [lib/commands/veloce/createconfig.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.40/lib/commands/veloce/createconfig.js)_
+_See code: [lib/commands/veloce/apexload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.40/lib/commands/veloce/apexload.js)_
 
 ## `sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-A] [-F <string>] [-w <string>] [-o <string>] [-R <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 

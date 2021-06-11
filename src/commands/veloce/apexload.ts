@@ -2,9 +2,8 @@ import {flags, SfdxCommand} from '@salesforce/command';
 import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
 import {Tooling} from '@salesforce/core/lib/connection';
 import {AnyJson} from '@salesforce/ts-types';
-import {ensureJsonArray, ensureJsonMap, ensureString, isJsonArray, toJsonMap} from '@salesforce/ts-types';
+import {QueryResult} from 'jsforce';
 import 'ts-replace-all';
-import {Field, FieldType, SoqlQueryResult} from '../../shared/dataSoqlQueryTypes';
 
 /* tslint:disable */
 const apexNode = require('@salesforce/apex-node');
@@ -223,12 +222,12 @@ ${objects}
       }
       // Query back Ids
       const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
-      const queryResult: SoqlQueryResult = await this.runSoqlQuery(conn, query, this.logger);
-      if (!queryResult.result.done) {
+      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger);
+      if (!queryResult.done) {
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
       }
       /* tslint:disable */
-      queryResult.result.records.forEach((r: any) => {
+      queryResult.records.forEach((r: any) => {
         if (extId2OldId[r[extId]] && r.Id) {
           if (extId2OldId[r[extId]] != r.Id) {
             this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
@@ -252,87 +251,18 @@ ${objects}
   }
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
-  ): Promise<SoqlQueryResult> {
-    let columns: Field[] = [];
+  ): Promise<QueryResult<unknown>> {
     logger.debug('running query');
 
     const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000});
     logger.debug(`Query complete with ${result.totalSize} records returned`);
     if (result.totalSize) {
       logger.debug('fetching columns for query');
-      columns = await this.retrieveColumns(connection, query);
     }
-
     // remove nextRecordsUrl and force done to true
     delete result.nextRecordsUrl;
     result.done = true;
-    return {
-      query,
-      columns,
-      result
-    };
-  }
-
-  /**
-   * Utility to fetch the columns involved in a soql query.
-   *
-   * Columns are then transformed into one of three types, Field, SubqueryField and FunctionField. List of
-   * fields is returned as the product.
-   *
-   * @param connection
-   * @param query
-   */
-  public async retrieveColumns(connection: Connection | Tooling, query: string):
-    Promise<Field[]> {
-    // eslint-disable-next-line no-underscore-dangle
-    const columnUrl = `${connection._baseUrl()}/query?q=${encodeURIComponent(query)}&columns=true`;
-    const results = toJsonMap(await connection.request(columnUrl));
-    const columns
-      :
-      Field[] = [];
-    for (let column of ensureJsonArray(results.columnMetadata)) {
-      column = ensureJsonMap(column);
-      const name = ensureString(column.columnName);
-
-      if (isJsonArray(column.joinColumns) && column.joinColumns.length > 0) {
-        if (column.aggregate) {
-          const field: Field = {
-            fieldType: FieldType.subqueryField,
-            name,
-            fields: []
-          };
-          for (const subcolumn of column.joinColumns) {
-            const f: Field = {
-              fieldType: FieldType.field,
-              name: ensureString(ensureJsonMap(subcolumn).columnName)
-            };
-            if (field.fields) field.fields.push(f);
-          }
-          columns.push(field);
-        } else {
-          for (const subcolumn of column.joinColumns) {
-            const f: Field = {
-              fieldType: FieldType.field,
-              name: `${name}.${ensureString(ensureJsonMap(subcolumn).columnName)}`
-            };
-            columns.push(f);
-          }
-        }
-      } else if (column.aggregate) {
-        const field: Field = {
-          fieldType: FieldType.functionField,
-          name: ensureString(column.displayName)
-        };
-        // If it isn't an alias, skip so the display name is used when messaging rows
-        if (!/expr[0-9]+/.test(name)) {
-          field.alias = name;
-        }
-        columns.push(field);
-      } else {
-        columns.push({fieldType: FieldType.field, name} as Field);
-      }
-    }
-    return columns;
+    return result;
   }
 
   private formatDefault(response) {
