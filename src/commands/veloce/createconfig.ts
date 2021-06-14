@@ -41,9 +41,9 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const templateFile = this.flags.template || 'ConfigurationSetting_template.csv';
-    const inputdir = this.flags.inputdir || '.';
-    const outputfile = this.flags.outputfile || 'VELOCPQ__ConfigurationSetting__c.csv';
+    const templateFile = this.flags.template;
+    const inputdir = this.flags.inputdir;
+    const outputfile = this.flags.outputfile;
 
     const template = fs.readFileSync(templateFile, 'UTF-8');
     const csvTemplate = parse(template, {columns: true, bom: true});
