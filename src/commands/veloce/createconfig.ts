@@ -3,7 +3,6 @@ import {Messages} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
-const parse = require('csv-parse/lib/sync');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 /* tslint:enable */
 
@@ -25,10 +24,8 @@ export default class Org extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    modelname: flags.string({char: 'n', description: messages.getMessage('modelnameFlagDescription'), required: true}),
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
-    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    template: flags.string({char: 't', description: messages.getMessage('templatefileFlagDescription'), required: true})
+    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username
@@ -41,22 +38,17 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const templateFile = this.flags.template;
     const inputdir = this.flags.inputdir;
     const outputfile = this.flags.outputfile;
-
-    const template = fs.readFileSync(templateFile, 'UTF-8');
-    const csvTemplate = parse(template, {columns: true, bom: true});
     const csvWriter = createCsvWriter({
       header: [{id: 'VELOCPQ__Key__c', title: 'VELOCPQ__Key__c'},
         {id: 'VELOCPQ__Value__c', title: 'VELOCPQ__Value__c'}],
       path: outputfile
     });
-    console.log('Using csv template', (csvTemplate));
     const result = [];
     fs.readdirSync(inputdir).forEach(file => {
       console.log('processing configuration file:', file);
-      const output = {...csvTemplate[0]};
+      const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: ''};
       const {value} = JSON.parse(fs.readFileSync(inputdir + file, 'UTF-8').toString());
       output.VELOCPQ__Value__c = value;
       output.VELOCPQ__Key__c = file.substring(0, file.indexOf('.'));
