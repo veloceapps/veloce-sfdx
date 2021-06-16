@@ -11,14 +11,18 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'createconfig');
+const messages = Messages.loadMessages('veloce-sfdx', 'packconfig');
 
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:createconfig -i config . -n BOARDING -t ConfigurationSettings_template.csv -o VELOCPQ__ConfigurationSetting__c.csv'
+    '$ sfdx veloce:createconfig -i config -o VELOCPQ__ConfigurationSetting__c.csv',
+    'Configuration file example \n' +
+    'filename: flows.json - where filename will be configuration property key( in this case `flows`) and inside that json file \n' +
+    '{\n    "value": "some value here maybe ' +
+    'multi-lined too",\n }'
   ];
 
   public static args = [{name: 'file'}];

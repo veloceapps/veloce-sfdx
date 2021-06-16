@@ -11,13 +11,15 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'dumprules');
+const messages = Messages.loadMessages('veloce-sfdx', 'packrules');
 
 export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:dumprules -i rules -o VELOCPQ__PriceRule__c.csv -m pricegroupconfiguration.txt'
+    '$ sfdx veloce:pack -i rules -o VELOCPQ__PriceRule__c.csv -m pgmap.json',
+    'Configuration file example: \n ' +
+    '[\n  {\n    "ruleGroupName": "project-cato-10-pre-config",\n    "ruleGroupId": "a6A7Z0000000s6eUAA"\n  },\n  {\n    "ruleGroupName": "project-cato-20",\n    "ruleGroupId": "b6A7Z0000000s6eUAA"\n  }\n]\n'
   ];
 
   public static args = [{name: 'file'}];
@@ -30,7 +32,7 @@ export default class Org extends SfdxCommand {
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
     outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    pricegroupconfiguration: flags.string({char: 'm', description: messages.getMessage('pricegroupconfigurationFlagDescription'), required: true})
+    pgmap: flags.string({char: 'm', description: messages.getMessage('pgmapFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username
@@ -43,7 +45,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const pricegroupconfiguration = this.flags.pricegroupconfiguration;
+    const pricegroupconfiguration = this.flags.pgmap;
     const inputdir = this.flags.inputdir;
     const outputFile = this.flags.outputfile;
     const csvWriter = createCsvWriter({
@@ -106,12 +108,11 @@ export default class Org extends SfdxCommand {
 
   public populateRuleGroupIdMap(mapPath: string): Map<string, string> {
     const result = new Map();
-    const data = fs.readFileSync(mapPath, 'UTF-8').toString();
-    const lines = data.replace(/\r\n/g, '\n').split('\n');
-    console.log('Rule group lines', lines);
-    for (const line of lines) {
-      const splitedLine = line.split(':');
-      result.set(splitedLine[0], splitedLine[1]);
+    const data = JSON.parse(fs.readFileSync(mapPath, 'UTF-8').toString());
+    console.log(data);
+    for (const ruleIdMap of data) {
+      console.log(ruleIdMap);
+      result.set(ruleIdMap['ruleGroupName'], ruleIdMap['ruleGroupId']);
     }
     return result;
   }
