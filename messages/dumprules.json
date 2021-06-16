@@ -1,0 +1,6 @@
+{
+  "commandDescription": "Dump rules to csv for salesforce import",
+  "pricegroupconfigurationFlagDescription": "Price group configuration map file to map rule to price group",
+  "inputdirFlagDescription": "Input directory to read rule files",
+  "outputfileFlagDescription": "Output csv rule file to create"
+}
