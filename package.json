@@ -10,7 +10,7 @@
     "@oclif/errors": "^1",
     "@salesforce/apex-node": "^0.1.21",
     "@salesforce/command": "^2",
-    "@salesforce/core": "^2",
+    "@salesforce/core": "^2.22.0",
     "csv-parse": "^4.15.3",
     "csv-write-stream": "^2.0.0",
     "csv-writer": "^1.6.0",
