@@ -142,7 +142,7 @@ export default class Org extends SfdxCommand {
       const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
 
       if (res.compare(fdata) == 0) {
-        this.ux.log(`Identical document is already uploaded, skipping creation of new ContentVersion!`);
+        this.ux.log(`Identical document is already uploaded: ${docId}, skipping creation of new ContentVersion!`);
         return 0;
       }
       this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`);
