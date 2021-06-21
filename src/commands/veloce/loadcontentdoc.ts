@@ -92,7 +92,7 @@ export default class Org extends SfdxCommand {
 
     interface RestResult {
       id: string;
-      success: Boolean;
+      success: boolean;
       errors: string[];
     }
 

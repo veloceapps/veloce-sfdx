@@ -71,7 +71,7 @@ export default class Org extends SfdxCommand {
     /* tslint:disable */
     const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
     /* tslint:enable */
-    //const data = Buffer.from(res.toString(), 'base64');
+    // const data = Buffer.from(res.toString(), 'base64');
     fs.writeFileSync(`${this.flags.outputfile}`, res, {flag: 'w+'});
 
     this.ux.log(`Successfully saved into ${this.flags.outputfile}`);
