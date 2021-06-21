@@ -137,9 +137,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY Qualified
         allowDelete: true,
         allowEdit: true,
         allowRead: true,
-        modifyAllRecords: sobjecttype !== 'Product2',
+        modifyAllRecords: (sobjecttype !== 'Product2' && sobjecttype !== 'Pricebook2'),
         object: sobjecttype,
-        viewAllRecords: sobjecttype !== 'Product2'
+        viewAllRecords: (sobjecttype !== 'Product2' && sobjecttype !== 'Pricebook2')
       });
     }
 
