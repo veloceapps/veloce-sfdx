@@ -1,0 +1,5 @@
+{
+  "commandDescription": "Dumps data from Document in org",
+  "idFlagDescription": "id of document to dump",
+  "outputfileFlagDescription": "relative/full path to write Document into"
+}
