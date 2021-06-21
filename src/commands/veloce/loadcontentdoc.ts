@@ -1,9 +1,8 @@
 import {flags, SfdxCommand} from '@salesforce/command';
-import {Messages, SfdxError} from '@salesforce/core';
+import {Messages} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
-const zlib = require("zlib");
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
@@ -41,9 +40,9 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('nameFlagDescription'),
       required: true
     }),
-    foldername: flags.string({
-      char: 'F',
-      description: messages.getMessage('foldernameFlagDescription'),
+    description: flags.string({
+      char: 'd',
+      description: messages.getMessage('descriptionFlagDescription'),
       required: true
     }),
     inputfile: flags.string({
@@ -72,106 +71,101 @@ export default class Org extends SfdxCommand {
     }
     const id = idmap[this.flags.id] ? idmap[this.flags.id] : this.flags.id;
 
-    // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
     const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'});
-    const gzipped = zlib.gzipSync(fdata);
-    // Encode to base64 TWICE!, first time is requirement of POST/PATCH, and it will be decoded on reads automatically by SF.
-    const b64Data = Buffer.from(gzipped.toString('base64')).toString('base64');
+    const b64Data = fdata.toString('base64');
 
     const conn = this.org.getConnection();
 
     // The type we are querying for
-    interface Document {
+    interface ContentVersion {
+      VersionData: string;
+      ContentDocumentId: string|undefined;
+      Title: string;
+      PathOnClient: string;
+      Description: string;
+      SharingOption: string;
+      SharingPrivacy: string;
+    }
+    interface ContentDocument {
       Id: string;
-      Body: string;
-      FolderId: string;
     }
 
-    interface Folder {
-      Id: string;
-      Name: string;
-      DeveloperName: string;
-      AccessType: string;
-      Type: string;
-    }
-
-    interface CreateResult {
+    interface RestResult {
       id: string;
-      success: boolean;
+      success: Boolean;
       errors: string[];
-      name: string;
-      message: string;
     }
-    // Query the org
-    const result = await conn.query<Document>(`Select Id,Body,FolderId from Document WHERE Id='${id}'`);
 
-    // Organization will always return one result, but this is an example of throwing an error
-    // The output and --json will automatically be handled for you.
-    let folderId;
+    // Query the org
+    const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`);
+
     if (!result.records || result.records.length <= 0) {
       // Document not found, insert new one.
-      // Check if veloce folder exists:
-      const folderResult = await conn.query<Folder>(`Select Id, Name, Type
-                                                     from Folder
-                                                     WHERE Name = 'velo_product_models'`);
-      if (!folderResult.records || folderResult.records.length <= 0) {
-        // Create new Folder
-        const folder = {
-          Name: this.flags.foldername,
-          DeveloperName: this.flags.foldername,
-          Type: 'Document',
-          AccessType: 'Public'
-        } as Folder;
-        const folderCreateResult = (await conn.sobject('Folder').create(folder)) as CreateResult;
-        if (folderCreateResult.success) {
-          this.ux.log(`New folder created ${folderCreateResult.name} with id ${folderCreateResult.id}`);
-        } else {
-          throw new SfdxError(`Failed to create folder: ${JSON.stringify(folderCreateResult)}`);
-        }
-        folderId = folderCreateResult.id;
-      } else {
-        folderId = folderResult.records[0].Id;
-        this.ux.log(`Use existing folder ${folderResult.records[0].Name} with id ${folderId}`);
-      }
-
-      const data = {
-        body: b64Data,
-        name: this.flags.name,
-        folderId
+      const data: ContentVersion = {
+        VersionData: b64Data,
+        ContentDocumentId: undefined,
+        Title: this.flags.name,
+        PathOnClient: this.flags.name,
+        Description: this.flags.description,
+        SharingOption: 'A',
+        SharingPrivacy: 'N'
       };
       /* tslint:disable */
-      const response = ((await conn.request({
-        url: `/services/data/v${conn.getApiVersion()}/sobjects/Document`,
+      const rr = await conn.request({
+        url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
         body: JSON.stringify(data),
         method: 'POST'
-      } as any)) as unknown) as CreateResult;
-      /* tslint:enable */
-      if (response.success) {
-        this.ux.log(`New Document ${this.flags.name} created with id ${response.id}`);
-      } else {
-        throw new SfdxError(`Failed to create document: ${JSON.stringify(response)}`);
+      } as any) as RestResult;
+      if (!rr.success) {
+        this.ux.log(`Failed to upload content version, error: ${rr.errors.join(',')}`)
+        process.exit(255)
       }
+
+      const r = await conn.query<ContentVersion>(`Select ContentDocumentId from ContentVersion WHERE IsLatest = true AND Id='${rr.id}'`);
+      if (!r.records || r.records.length <= 0) {
+        this.ux.log(`Failed to query newly created content record, no results`)
+        process.exit(255)
+      }
+
       // Store new ID in idmap
-      if (this.flags.id !== response.id) {
-        idmap[this.flags.id] = response.id;
+      if (this.flags.id !== r.records[0].ContentDocumentId) {
+        this.ux.log(`${this.flags.id} => ${r.records[0].ContentDocumentId}`)
+        idmap[this.flags.id] = r.records[0].ContentDocumentId;
       }
     } else {
-      // Document found, only upload new file!
-      folderId = result.records[0].FolderId;
+      // Document found, only upload new ContentVersion
       const docId = result.records[0].Id;
+
+      const query = `Select VersionData from ContentVersion WHERE IsLatest = true AND ContentDocumentId='${docId}'`;
+      const qr = await conn.query<ContentVersion>(query);
+      const url = qr.records[0].VersionData;
+      const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
+
+      if (res.compare(fdata) == 0) {
+        this.ux.log(`Identical document is already uploaded, skipping creation of new ContentVersion!`);
+        return 0;
+      }
       this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`);
 
-      const data = {
-        body: b64Data,
-        name: this.flags.name,
-        folderId
+      const data: ContentVersion = {
+        VersionData: b64Data,
+        ContentDocumentId: docId,
+        Title: this.flags.name,
+        PathOnClient: this.flags.name,
+        Description: this.flags.description,
+        SharingOption: 'A',
+        SharingPrivacy: 'N'
       };
       /* tslint:disable */
-      await conn.request({
-        url: `/services/data/v${conn.getApiVersion()}/sobjects/Document/${docId}`,
+      const r = await conn.request({
+        url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
         body: JSON.stringify(data),
-        method: 'PATCH'
-      } as any);
+        method: 'POST'
+      } as any) as RestResult;
+      if (!r.success) {
+        this.ux.log(`Upload of content version failed: ${r.errors.join(',')}`)
+        process.exit(255)
+      }
     }
 
     fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});

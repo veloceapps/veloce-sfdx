@@ -153,6 +153,7 @@ export default class Org extends SfdxCommand {
       }
       // Store new ID in idmap
       if (this.flags.id !== response.id) {
+        this.ux.log(`${this.flags.id} => ${response.id}`)
         idmap[this.flags.id] = response.id;
       }
     } else {
