@@ -23,7 +23,7 @@ export default class Org extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
+    inputdir: flags.string({char: 'i', description: messages.getMessage('inputfileFlagDescription'), required: true}),
     outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true})
   };
 
