@@ -31,8 +31,7 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
-    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    pgmap: flags.string({char: 'm', description: messages.getMessage('pgmapFlagDescription'), required: true})
+    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username

@@ -40,7 +40,7 @@ USAGE
 * [`sfdx veloce:login -p <string> -a <string> -u <string> -r <string> [-s <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocelogin--p-string--a-string--u-string--r-string--s-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:packconfig -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackconfig--i-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:packpricelist -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackpricelist--i-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
-* [`sfdx veloce:packrules -i <string> -o <string> -m <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackrules--i-string--o-string--m-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:packrules -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackrules--i-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:packrulesgroup -i <string> -o <string> -m <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackrulesgroup--i-string--o-string--m-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:packui -n <string> -i <string> -o <string> -I <string> [-P <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackui--n-string--i-string--o-string--i-string--p-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:permgen [-f <string>] [-s <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepermgen--f-string--s-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
@@ -494,12 +494,12 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLE
-  $ sfdx veloce:packpricelist -i project-cato-pricelist.json -o VELOCPQ__PriceList__c.csv
+  $ sfdx veloce:packpricelist -i ./project-cato-pricelist.json -o ./VELOCPQ__PriceList__c.csv
 ```
 
 _See code: [lib/commands/veloce/packpricelist.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.44/lib/commands/veloce/packpricelist.js)_
 
-## `sfdx veloce:packrules -i <string> -o <string> -m <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx veloce:packrules -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 Copy rules to csv for salesforce import
 
@@ -507,15 +507,12 @@ Copy rules to csv for salesforce import
 Copy rules to csv for salesforce import
 
 USAGE
-  $ sfdx veloce:packrules -i <string> -o <string> -m <string> [--json] [--loglevel 
+  $ sfdx veloce:packrules -i <string> -o <string> [--json] [--loglevel 
   trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
   -i, --inputdir=inputdir                                                           (required) Input directory to read
                                                                                     rule files
-
-  -m, --pgmap=pgmap                                                                 (required) Price group configuration
-                                                                                    map file to map rule to price group
 
   -o, --outputfile=outputfile                                                       (required) Output csv rule file to
                                                                                     create
@@ -561,7 +558,8 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLES
-  $ sfdx veloce:packrulesgroup -i rules -o VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json
+  $ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json
+  Each rule in rules folder need to have .json meta file - for example xxx.drl will have xxx.json. 
   Meta file example: 
   {
        "label": "project cato 10 pre config",

@@ -18,7 +18,8 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:packrulesgroup -i rules -o VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json',
+    '$ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json',
+    'Each rule in rules folder need to have .json meta file - for example xxx.drl will have xxx.json. \n' +
     'Meta file example: \n' +
     '{\n    "label": "project cato 10 pre config",\n    "description": "Pre Configuration Rules",\n    "sequence": 10,\n    "type": "PreConfiguration"\n}'
   ];
