@@ -1,0 +1,6 @@
+{
+  "commandDescription": "Copy rules group to csv for salesforce import",
+  "inputdirFlagDescription": "Input directory to read rule group files and meta information",
+  "outputfileFlagDescription": "Output csv rules group file to create",
+  "pricelistmetaFlagDescription": "Price list meta information"
+}
