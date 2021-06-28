@@ -3,6 +3,7 @@ import {Messages} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
+const path = require('path');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 /* tslint:enable */
 
@@ -18,8 +19,7 @@ export default class Org extends SfdxCommand {
 
   public static examples = [
     '$ sfdx veloce:pack -i rules -o VELOCPQ__PriceRule__c.csv -m pgmap.json',
-    'Configuration file example: \n ' +
-    '[\n  {\n    "ruleGroupName": "project-cato-10-pre-config",\n    "ruleGroupId": "a6A7Z0000000s6eUAA"\n  },\n  {\n    "ruleGroupName": "project-cato-20",\n    "ruleGroupId": "b6A7Z0000000s6eUAA"\n  }\n]\n'
+    'Rule file name will be used as a VELOCPQ__PriceRuleGroupId__c for example for rules file project-cato-10-pre-config.drl VELOCPQ__PriceRuleGroupId__c will be project-cato-10-pre-config'
   ];
 
   public static args = [{name: 'file'}];
@@ -31,8 +31,7 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
-    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    pgmap: flags.string({char: 'm', description: messages.getMessage('pgmapFlagDescription'), required: true})
+    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username
@@ -45,7 +44,6 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const pricegroupconfiguration = this.flags.pgmap;
     const inputdir = this.flags.inputdir;
     const outputFile = this.flags.outputfile;
     const csvWriter = createCsvWriter({
@@ -58,19 +56,26 @@ export default class Org extends SfdxCommand {
       ],
       path: outputFile
     });
-    const result = this.extractRulesFromFolder(inputdir, pricegroupconfiguration);
+    const result = this.extractRulesFromFolder(inputdir);
     console.log(result);
     csvWriter.writeRecords(result).then(() => console.log('Result saved to ', outputFile));
     return {'Output ': outputFile};
   }
 
   // tslint:disable-next-line:no-any
-  public extractRulesFromFolder(rulesDirectory: string, pathToRuleGroupMap: string): any {
-    const ruleToGroup = this.populateRuleGroupIdMap(pathToRuleGroupMap);
+  public extractRulesFromFolder(rulesDirectory: string): any {
+    const extension = '.drl';
+    const rulesFiles = [];
+    fs.readdirSync(rulesDirectory).forEach(ruleGroupFile => {
+      console.log(path.extname(ruleGroupFile).toLowerCase());
+      if (path.extname(ruleGroupFile).toLowerCase() === extension) {
+        rulesFiles.push(ruleGroupFile);
+      }
+    });
     const result = [];
-    fs.readdirSync(rulesDirectory).forEach(ruleFile => {
+    for (const ruleFile of rulesFiles) {
       const rulesContent = fs.readFileSync(rulesDirectory + '/' + ruleFile, 'UTF-8').toString();
-      const groupId = this.getRuleGroupId(ruleFile, ruleToGroup);
+      const groupId = this.getRuleGroupId(ruleFile);
       const rulesRegexResults = [...rulesContent.match(Org.ruleExtractRegex)];
       for (const rulesRegexResult of rulesRegexResults) {
         const preconditionResult = [...rulesRegexResult.match(Org.rulePreconditionRegex)];
@@ -83,7 +88,7 @@ export default class Org extends SfdxCommand {
         };
         result.push(ruleCsvRecord);
       }
-    });
+    }
     return result;
   }
 
@@ -101,19 +106,7 @@ export default class Org extends SfdxCommand {
     return parseInt(sequence.toString().trim());
   }
 
-  public getRuleGroupId(ruleFilename: string, ruleToGroup: Map<string, string>): string {
-    const key = ruleFilename.substring(0, ruleFilename.indexOf('.'));
-    return ruleToGroup.get(key);
-  }
-
-  public populateRuleGroupIdMap(mapPath: string): Map<string, string> {
-    const result = new Map();
-    const data = JSON.parse(fs.readFileSync(mapPath, 'UTF-8').toString());
-    console.log(data);
-    for (const ruleIdMap of data) {
-      console.log(ruleIdMap);
-      result.set(ruleIdMap['ruleGroupName'], ruleIdMap['ruleGroupId']);
-    }
-    return result;
+  public getRuleGroupId(ruleFilename: string): string {
+    return ruleFilename.substring(0, ruleFilename.indexOf('.'));
   }
 }

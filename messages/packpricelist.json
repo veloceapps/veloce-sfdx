@@ -1,0 +1,5 @@
+{
+  "commandDescription": "Create price list file for import to salesforce",
+  "inputfileFlagDescription": "Input file with meta information to create rule list",
+  "outputfileFlagDescription": "Output csv rules group file to create"
+}
