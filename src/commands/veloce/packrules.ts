@@ -18,7 +18,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:packrules -i rules -o VELOCPQ__PriceRule__c.csv',
+    '$ sfdx veloce:packrules -i rules -o ./VELOCPQ__PriceRule__c.csv',
     'Rule file name will be used as a VELOCPQ__PriceRuleGroupId__c for example for rules file project-cato-10-pre-config.drl VELOCPQ__PriceRuleGroupId__c will be project-cato-10-pre-config'
   ];
 
