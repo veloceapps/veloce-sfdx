@@ -18,7 +18,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:pack -i rules -o VELOCPQ__PriceRule__c.csv -m pgmap.json',
+    '$ sfdx veloce:packrules -i rules -o ./VELOCPQ__PriceRule__c.csv',
     'Rule file name will be used as a VELOCPQ__PriceRuleGroupId__c for example for rules file project-cato-10-pre-config.drl VELOCPQ__PriceRuleGroupId__c will be project-cato-10-pre-config'
   ];
 
@@ -67,13 +67,13 @@ export default class Org extends SfdxCommand {
     const extension = '.drl';
     const rulesFiles = [];
     fs.readdirSync(rulesDirectory).forEach(ruleGroupFile => {
-      console.log(path.extname(ruleGroupFile).toLowerCase());
       if (path.extname(ruleGroupFile).toLowerCase() === extension) {
         rulesFiles.push(ruleGroupFile);
       }
     });
     const result = [];
     for (const ruleFile of rulesFiles) {
+      console.log('Processing rules file', ruleFile);
       const rulesContent = fs.readFileSync(rulesDirectory + '/' + ruleFile, 'UTF-8').toString();
       const groupId = this.getRuleGroupId(ruleFile);
       const rulesRegexResults = [...rulesContent.match(Org.ruleExtractRegex)];

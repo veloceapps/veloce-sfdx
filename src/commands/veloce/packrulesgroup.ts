@@ -29,7 +29,7 @@ export default class Org extends SfdxCommand {
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
     outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    pgmap: flags.string({char: 'm', description: messages.getMessage('pricelistmetaFlagDescription'), required: true})
+    pricelistmeta: flags.string({char: 'm', description: messages.getMessage('pricelistmetaFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username
@@ -57,7 +57,6 @@ export default class Org extends SfdxCommand {
       path: outputFile
     });
     const result = this.extractRulesGroupMeta(inputdir, pricelistmeta, outputFile);
-    console.log(result);
     csvWriter.writeRecords(result).then(() => console.log('Result saved to ', outputFile));
     return {'Output ': outputFile};
   }
@@ -66,12 +65,12 @@ export default class Org extends SfdxCommand {
     const extension = '.json';
     const metaFiles = [];
     fs.readdirSync(inputdir).forEach(ruleGroupFile => {
-      console.log(path.extname(ruleGroupFile).toLowerCase());
       if (path.extname(ruleGroupFile).toLowerCase() === extension) {
         metaFiles.push(ruleGroupFile);
       }
     });
     const result = [];
+    console.log('Pricelist meta file path', pricelistmetaFile);
     const priceListMeta = JSON.parse(fs.readFileSync(pricelistmetaFile, 'UTF-8').toString());
     for (const metaFile of metaFiles) {
       const data = JSON.parse(fs.readFileSync(inputdir + '/' + metaFile, 'UTF-8').toString());
