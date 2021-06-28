@@ -57,7 +57,6 @@ export default class Org extends SfdxCommand {
       path: outputFile
     });
     const result = this.extractRulesGroupMeta(inputdir, pricelistmeta, outputFile);
-    console.log(result);
     csvWriter.writeRecords(result).then(() => console.log('Result saved to ', outputFile));
     return {'Output ': outputFile};
   }
