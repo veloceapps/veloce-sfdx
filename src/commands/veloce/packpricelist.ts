@@ -17,7 +17,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:packpricelist -i ./project-cato-pricelist.json -o ./VELOCPQ__PriceList__c.csv'
+    '$ sfdx veloce:packpricelist -i project-cato-pricelist.json -o VELOCPQ__PriceList__c.csv'
   ];
 
   public static args = [{name: 'file'}];
