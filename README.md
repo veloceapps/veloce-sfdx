@@ -22,7 +22,7 @@ $ npm install -g veloce-sfdx
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-veloce-sfdx/1.0.45 darwin-x64 node-v16.3.0
+veloce-sfdx/1.0.45 darwin-x64 node-v15.14.0
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -494,7 +494,7 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLE
-  $ sfdx veloce:packpricelist -i project-cato-pricelist.json -o VELOCPQ__PriceList__c.csv
+  $ sfdx veloce:packpricelist -i ./project-cato-pricelist.json -o ./VELOCPQ__PriceList__c.csv
 ```
 
 _See code: [lib/commands/veloce/packpricelist.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.45/lib/commands/veloce/packpricelist.js)_
@@ -523,7 +523,7 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLES
-  $ sfdx veloce:packrules -i rules -o VELOCPQ__PriceRule__c.csv
+  $ sfdx veloce:packrules -i rules -o ./VELOCPQ__PriceRule__c.csv
   Rule file name will be used as a VELOCPQ__PriceRuleGroupId__c for example for rules file 
   project-cato-10-pre-config.drl VELOCPQ__PriceRuleGroupId__c will be project-cato-10-pre-config
 ```
