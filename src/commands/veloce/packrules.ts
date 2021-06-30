@@ -52,6 +52,7 @@ export default class Org extends SfdxCommand {
         {id: 'VELOCPQ__Action__c', title: 'VELOCPQ__Action__c'},
         {id: 'VELOCPQ__Active__c', title: 'VELOCPQ__Active__c'},
         {id: 'VELOCPQ__Condition__c', title: 'VELOCPQ__Condition__c'},
+        {id: 'VELOCPQ__ReferenceId__c', title: 'VELOCPQ__ReferenceId__c'},
         {id: 'VELOCPQ__Sequence__c', title: 'VELOCPQ__Sequence__c'}
       ],
       path: outputFile
@@ -82,6 +83,7 @@ export default class Org extends SfdxCommand {
 
         const ruleCsvRecord = {
           Name: this.getRuleName(rulesRegexResult), VELOCPQ__PriceRuleGroupId__c: groupId,
+          VELOCPQ__ReferenceId__c: groupId,
           VELOCPQ__Action__c: ruleBodyResult[0], VELOCPQ__Active__c: 1,
           VELOCPQ__Condition__c: preconditionResult[0], VELOCPQ__Sequence__c: this.getSequenceNumber(rulesRegexResult)
         };
