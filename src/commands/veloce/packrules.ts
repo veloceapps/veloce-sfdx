@@ -57,7 +57,6 @@ export default class Org extends SfdxCommand {
       path: outputFile
     });
     const result = this.extractRulesFromFolder(inputdir);
-    console.log(result);
     csvWriter.writeRecords(result).then(() => console.log('Result saved to ', outputFile));
     return {'Output ': outputFile};
   }
@@ -75,7 +74,7 @@ export default class Org extends SfdxCommand {
     for (const ruleFile of rulesFiles) {
       console.log('Processing rules file', ruleFile);
       const rulesContent = fs.readFileSync(rulesDirectory + '/' + ruleFile, 'UTF-8').toString();
-      const groupId = this.getRuleGroupId(ruleFile);
+      const groupId = this.getRuleGroupId(rulesDirectory, ruleFile);
       const rulesRegexResults = [...rulesContent.match(Org.ruleExtractRegex)];
       for (const rulesRegexResult of rulesRegexResults) {
         const preconditionResult = [...rulesRegexResult.match(Org.rulePreconditionRegex)];
@@ -106,7 +105,9 @@ export default class Org extends SfdxCommand {
     return parseInt(sequence.toString().trim());
   }
 
-  public getRuleGroupId(ruleFilename: string): string {
-    return ruleFilename.substring(0, ruleFilename.indexOf('.'));
+  public getRuleGroupId(rulesDirectory: string, ruleFilename: string): string {
+    const fileName = ruleFilename.substring(0, ruleFilename.indexOf('.'));
+    const data = JSON.parse(fs.readFileSync(rulesDirectory + '/' + fileName + '.json', 'UTF-8').toString());
+    return data['priceGroupId'];
   }
 }
