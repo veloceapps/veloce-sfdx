@@ -18,7 +18,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json',
+    '$ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -P PRICELISTID',
     'Each rule in rules folder need to have .json meta file - for example xxx.drl will have xxx.json. \n' +
     'Meta file example: \n' +
     '{\n    "label": "project cato 10 pre config",\n    "description": "Pre Configuration Rules",\n    "sequence": 10,\n    "type": "PreConfiguration"\n}'
@@ -29,7 +29,7 @@ export default class Org extends SfdxCommand {
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
     outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
-    pricelistmeta: flags.string({char: 'm', description: messages.getMessage('pricelistmetaFlagDescription'), required: true})
+    pricelistiid: flags.string({char: 'P', description: messages.getMessage('pricelistidFlagDescription'), required: false})
   };
 
   // Comment this out if your command does not require an org username
@@ -45,6 +45,7 @@ export default class Org extends SfdxCommand {
     const pricelistmeta = this.flags.pricelistmeta;
     const inputdir = this.flags.inputdir;
     const outputFile = this.flags.outputfile;
+    const pricelistiid = this.flags.pricelistiid;
     const csvWriter = createCsvWriter({
       header: [{id: 'Id', title: 'Id'},
         {id: 'Name', title: 'Name'},
@@ -56,12 +57,12 @@ export default class Org extends SfdxCommand {
       ],
       path: outputFile
     });
-    const result = this.extractRulesGroupMeta(inputdir, pricelistmeta, outputFile);
+    const result = this.extractRulesGroupMeta(inputdir, pricelistmeta, pricelistiid);
     csvWriter.writeRecords(result).then(() => console.log('Result saved to ', outputFile));
     return {'Output ': outputFile};
   }
 
-  public extractRulesGroupMeta(inputdir: string, pricelistmetaFile: string, outputFile: string) {
+  public extractRulesGroupMeta(inputdir: string, pricelistmetaFile: string, pricelistid: string) {
     const extension = '.json';
     const metaFiles = [];
     fs.readdirSync(inputdir).forEach(ruleGroupFile => {
@@ -71,14 +72,13 @@ export default class Org extends SfdxCommand {
     });
     const result = [];
     console.log('Pricelist meta file path', pricelistmetaFile);
-    const priceListMeta = JSON.parse(fs.readFileSync(pricelistmetaFile, 'UTF-8').toString());
     for (const metaFile of metaFiles) {
       const data = JSON.parse(fs.readFileSync(inputdir + '/' + metaFile, 'UTF-8').toString());
       const ruleCsvRecord = {
-        Id: metaFile.substring(0, metaFile.indexOf('.')), Name: data['label'],
+        Id: data['priceGroupId'], Name: data['label'],
         VELOCPQ__Description__c: data['description'], VELOCPQ__Active__c: 1,
         VELOCPQ__Sequence__c: data['sequence'], VELOCPQ__Type__c: data['type'],
-        VELOCPQ__PriceListId__c: priceListMeta['id']
+        VELOCPQ__PriceListId__c: pricelistid
       };
       result.push(ruleCsvRecord);
     }
