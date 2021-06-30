@@ -558,7 +558,7 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLES
-  $ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -m pricelistmeta.json -P ABACABDA
+  $ sfdx veloce:packrulesgroup -i ./rules/ -o ./VELOCPQ__PriceRuleGroup__c.csv -P PRICELISTID
   Each rule in rules folder need to have .json meta file - for example xxx.drl will have xxx.json. 
   Meta file example: 
   {
