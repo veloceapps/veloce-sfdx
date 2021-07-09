@@ -22,7 +22,7 @@ $ npm install -g veloce-sfdx
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-veloce-sfdx/1.0.46 darwin-x64 node-v16.3.0
+veloce-sfdx/1.0.46 darwin-x64 node-v15.14.0
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
