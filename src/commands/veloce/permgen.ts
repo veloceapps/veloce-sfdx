@@ -128,12 +128,12 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY Qualified
 SELECT Metadata
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiName IN ('${apiName}') LIMIT 1`, {autoFetch: true, maxFetch: 50000});
-        const tf = toolingResult.records[0]
+        const tf = toolingResult.records[0];
         const required = tf['Metadata']['required'];
         if (required) {
           continue;
         }
-        this.ux.log(`Adding field: ${sobjecttype}.${apiName}`)
+        this.ux.log(`Adding field: ${sobjecttype}.${apiName}`);
         fieldPermissions.push({
           editable: true,
           readable: true,
