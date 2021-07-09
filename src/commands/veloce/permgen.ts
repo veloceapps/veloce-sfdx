@@ -19,11 +19,11 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    `$ sfdx veloce:permgen -f ./ myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s Product2
+    `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s Product2
   Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   My hub org id is: 00Dxx000000001234
   `,
-    `$ sfdx veloce:permgen -f ./ myname.csv --targetusername myOrg@example.com -s Product2
+    `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com -s Product2
   Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   `
   ];
@@ -115,7 +115,7 @@ export default class Org extends SfdxCommand {
     for (const sobjecttype of sobjecttypess) {
       const conn = this.org.getConnection();
       const fieldsResult = await conn.autoFetchQuery(`
-SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+SELECT EntityDefinition.QualifiedApiName,QualifiedApiName
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000});
@@ -124,7 +124,16 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY Qualified
         if (!apiName.endsWith('__c') || ignorefields.includes(apiName)) { // only custom fields!
           continue;
         }
-        // const datatype = f['DataType'];
+        const toolingResult = await conn.tooling.autoFetchQuery(`
+SELECT Metadata
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiName IN ('${apiName}') LIMIT 1`, {autoFetch: true, maxFetch: 50000});
+        const tf = toolingResult.records[0]
+        const required = tf['Metadata']['required'];
+        if (required) {
+          continue;
+        }
+        this.ux.log(`Adding field: ${sobjecttype}.${apiName}`)
         fieldPermissions.push({
           editable: true,
           readable: true,

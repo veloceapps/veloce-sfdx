@@ -645,12 +645,12 @@ OPTIONS
                                                                                     this command invocation
 
 EXAMPLES
-  $ sfdx veloce:permgen -f ./ myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s 
+  $ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s 
   Product2
      Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
      My hub org id is: 00Dxx000000001234
   
-  $ sfdx veloce:permgen -f ./ myname.csv --targetusername myOrg@example.com -s Product2
+  $ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com -s Product2
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
