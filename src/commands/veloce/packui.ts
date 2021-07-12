@@ -100,10 +100,8 @@ export default class Org extends SfdxCommand {
         if (section['propertiesUrl']) {
           const p = `${inputdir}/${section['propertiesUrl'].trim()}`;
           this.assertPath(p);
-          if (fs.existsSync(p)) {
-            section.properties = this.parseJsonFile(p);
-            delete section['propertiesUrl'];
-          }
+          section.properties = this.parseJsonFile(p);
+          delete section['propertiesUrl'];
         }
       }
     }
