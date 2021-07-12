@@ -97,6 +97,12 @@ export default class Org extends SfdxCommand {
           section['styles'] = base64;
           delete section['stylesUrl'];
         }
+        if (section['propertiesUrl']) {
+          const p = `${inputdir}/${section['propertiesUrl'].trim()}`;
+          this.assertPath(p);
+          section.properties = this.parseJsonFile(p);
+          delete section['propertiesUrl'];
+        }
       }
     }
     const output = JSON.stringify(input, null, 2);
@@ -113,6 +119,16 @@ export default class Org extends SfdxCommand {
         this.ux.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`);
         process.exit(255);
       }
+    }
+  }
+
+  private parseJsonFile(p: string) {
+    try {
+      const b = fs.readFileSync(p);
+      return JSON.parse(b);
+    } catch (e) {
+      this.ux.log('Failed to read/parse JSON file ', e);
+      process.exit(255);
     }
   }
 }
