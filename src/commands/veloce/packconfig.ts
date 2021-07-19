@@ -53,12 +53,11 @@ export default class Org extends SfdxCommand {
     fs.readdirSync(inputdir).forEach(file => {
       console.log('processing configuration file:', file);
       const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: ''};
-      const {value} = JSON.parse(fs.readFileSync(inputdir + file, 'UTF-8').toString());
-      output.VELOCPQ__Value__c = value;
-      output.VELOCPQ__Key__c = file.substring(0, file.indexOf('.'));
+      output.VELOCPQ__Value__c = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString();
+      output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file;
       result.push(output);
     });
     csvWriter.writeRecords(result).then(() => console.log('Result saved to', outputfile));
-    return {'Output ': outputfile};
+    return {output: outputfile, result};
   }
 }
