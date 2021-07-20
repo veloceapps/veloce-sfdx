@@ -46,15 +46,17 @@ export default class Org extends SfdxCommand {
     const outputfile = this.flags.outputfile;
     const csvWriter = createCsvWriter({
       header: [{id: 'VELOCPQ__Key__c', title: 'VELOCPQ__Key__c'},
-        {id: 'VELOCPQ__Value__c', title: 'VELOCPQ__Value__c'}],
+        {id: 'VELOCPQ__Value__c', title: 'VELOCPQ__Value__c'},
+        {id: 'VELOCPQ__ReferenceId__c', title: 'VELOCPQ__ReferenceId__c'}],
       path: outputfile
     });
     const result = [];
     fs.readdirSync(inputdir).forEach(file => {
       console.log('processing configuration file:', file);
-      const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: ''};
+      const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: '', VELOCPQ__ReferenceId__c: ''};
       output.VELOCPQ__Value__c = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString();
       output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file;
+      output.VELOCPQ__ReferenceId__c = output.VELOCPQ__Key__c;
       result.push(output);
     });
     csvWriter.writeRecords(result).then(() => console.log('Result saved to', outputfile));
