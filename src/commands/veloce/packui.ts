@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages } from '@salesforce/core';
+import {Messages, SfdxError} from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 /* tslint:disable */
 const fs = require('fs');
@@ -68,7 +68,7 @@ export default class Org extends SfdxCommand {
             this.ux.log(`${metadata['priceList']} => ${idmap[metadata['priceList']]}`);
             metadata['priceList'] = idmap[metadata['priceList']];
           } else {
-            this.ux.log(`Keeping existing pricelistId: ${metadata['priceList']} since no --pricelistid specified!`);
+            throw new SfdxError(`Existing pricelistId: ${metadata['priceList']} was NOT REPLACED, because no entry in idmap was present`, 'PricelistIdNotReplaced');
           }
         }
       }
