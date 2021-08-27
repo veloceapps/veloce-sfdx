@@ -24,7 +24,7 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     modelname: flags.string({char: 'n', description: messages.getMessage('modelnameFlagDescription'), required: true}),
-    pricelistiid: flags.string({char: 'P', description: messages.getMessage('pricelistidFlagDescription'), required: false}),
+    pricelistid: flags.string({char: 'P', description: messages.getMessage('pricelistidFlagDescription'), required: false}),
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
     outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true})
@@ -55,13 +55,13 @@ export default class Org extends SfdxCommand {
     const input = JSON.parse(inputString);
     for (const metadata of input) {
       if (metadata['priceList']) {
-        if (this.flags.pricelistiid) { // Prioritize passed in --pricelistid
-          if (idmap[this.flags.pricelistiid]) {
-            this.ux.log(`${metadata['priceList']} => ${idmap[this.flags.pricelistiid]}`);
+        if (this.flags.pricelistid) { // Prioritize passed in --pricelistid
+          if (idmap[this.flags.pricelistid]) {
+            this.ux.log(`${metadata['priceList']} => ${idmap[this.flags.pricelistid]}`);
             metadata['priceList'] = idmap[metadata['priceList']];
           } else {
-            this.ux.log(`${metadata['priceList']} => ${this.flags.pricelistiid}`);
-            metadata['priceList'] = this.flags.pricelistiid;
+            this.ux.log(`${metadata['priceList']} => ${this.flags.pricelistid}`);
+            metadata['priceList'] = this.flags.pricelistid;
           }
         } else {
           if (idmap[metadata['priceList']]) {
