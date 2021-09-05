@@ -48,15 +48,14 @@ export default class Org extends SfdxCommand {
     const conn = this.org.getConnection();
 
     const droolsDeploy = new DroolsDeploy();
-    deploymentInput.groups.forEach(g => {
-      droolsDeploy.preprocess(g, this.ux, conn);
+    for await (const group of deploymentInput.groups) {
+      await droolsDeploy.preprocess(group, this.ux, conn);
       try {
-        droolsDeploy.process(g, this.ux, conn);
+        await droolsDeploy.process(group, this.ux, conn);
       } catch (e) {
-        console.log('failed');
+        console.log('failed', e);
       }
-    });
-
+    }
     // const deployStrategy = new DeployStrategy(this.ux, conn);
     //
     // const deploymentResult = deploymentInput.groups.map(async group => {
