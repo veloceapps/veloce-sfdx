@@ -36,9 +36,7 @@ const groupFieldMapping = {
 export class DroolsDeploy extends DeploymentProcessorAdapter {
 
   public async preprocess(input: DeploymentGroup, logger, conn) {
-    let result;
     const exec = new ExecuteService(conn);
-
     const activeGroups = (await this.fetchActiveRecords(exec.connection, GROUP_OBJECT));
     const activeRules = (await this.fetchActiveRecords(exec.connection, RULE_OBJECT));
     // TODO think on possible force flags + fail saves
@@ -50,49 +48,23 @@ export class DroolsDeploy extends DeploymentProcessorAdapter {
         out
       };
     }
-
-    //TODO make as commands and execute sequentially
-    const deleteGroupsScript = this.prepareDeleteScript(GROUP_OBJECT);
-    result = await this.executeScript(exec, deleteGroupsScript);
-    if (!result.success) {
-      const out = this.formatDefault(result);
-      logger.log(out);
-      return {
-        status: false,
-        out
-      };
+    const oldRulesCleanCommands = [
+      this.prepareDeleteScript(GROUP_OBJECT),
+      this.prepareDeleteScript(RULE_OBJECT),
+      this.prepareInactiveScript(GROUP_OBJECT),
+      this.prepareInactiveScript(RULE_OBJECT)
+    ];
+    for await(const command of oldRulesCleanCommands) {
+      const result = await this.executeScript(exec, command);
+      if (!result.success) {
+        const out = this.formatDefault(result);
+        logger.log(out);
+        return {
+          status: false,
+          out
+        };
+      }
     }
-    const deleteRulesScript = this.prepareDeleteScript(RULE_OBJECT);
-    result = await this.executeScript(exec, deleteRulesScript);
-    if (!result.success) {
-      const out = this.formatDefault(result);
-      logger.log(out);
-      return {
-        status: false,
-        out
-      };
-    }
-    const groupsInactiveScript = this.prepareInactiveScript(GROUP_OBJECT);
-    result = await this.executeScript(exec, groupsInactiveScript);
-    if (!result.success) {
-      const out = this.formatDefault(result);
-      logger.log(out);
-      return {
-        status: false,
-        out
-      };
-    }
-    const rulesInactiveScript = this.prepareInactiveScript(RULE_OBJECT);
-    result = await this.executeScript(exec, rulesInactiveScript);
-    if (!result.success) {
-      const out = this.formatDefault(result);
-      logger.log(out);
-      return {
-        status: false,
-        out
-      };
-    }
-
     return {
       status: true,
     };
