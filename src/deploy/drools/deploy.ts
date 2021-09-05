@@ -13,6 +13,8 @@ interface Record {
 }
 
 const ACTIVE_FIELD = 'VELOCPQ_Active__c';
+const GROUP_OBJECT = 'TestPriceRuleGroup__c';
+const RULE_OBJECT = 'TestVelocePriceRule__c';
 
 // can transform automatically namespacePrefix + Capitalize + __c
 const ruleFieldMapping = {
@@ -34,111 +36,140 @@ const groupFieldMapping = {
 export class DroolsDeploy extends DeploymentProcessorAdapter {
 
   public async preprocess(input: DeploymentGroup, logger, conn) {
-    let scriptSuccess: boolean;
-    // todo
-    let output = '';
-    output += 'a';
+    let result;
     const exec = new ExecuteService(conn);
 
-    // SELECT Existing Groups/Rules
-    const fetchGroupId = (await this.fetchActiveRecords(exec.connection, 'TestPriceRuleGroup__c')).map(r => r.Id);
-    console.log('fetchGroupId', fetchGroupId);
-
-    const deleteGroupsScript = this.prepareDeleteScript('TestPriceRuleGroup__c');
-    scriptSuccess = await this.executeScript(exec, logger, output, deleteGroupsScript);
-    if (!scriptSuccess) {
+    const activeGroups = (await this.fetchActiveRecords(exec.connection, GROUP_OBJECT));
+    const activeRules = (await this.fetchActiveRecords(exec.connection, RULE_OBJECT));
+    // TODO think on possible force flags + fail saves
+    if (activeGroups.length === 0 || activeRules.length === 0) {
+      const out = 'No Active Groups or Rules, skipping delete looks like something went wrong and should be checked manually';
+      logger.log(out);
       return {
         status: false,
-        output
+        out
       };
     }
-    const groupsInactiveScript = this.prepareInactiveScript('TestPriceRuleGroup__c');
-    console.log('sc', groupsInactiveScript);
 
-    scriptSuccess = await this.executeScript(exec, logger, output, groupsInactiveScript);
-    if (!scriptSuccess) {
-      console.log('fail!!!');
+    //TODO make as commands and execute sequentially
+    const deleteGroupsScript = this.prepareDeleteScript(GROUP_OBJECT);
+    result = await this.executeScript(exec, deleteGroupsScript);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
       return {
         status: false,
-        output
+        out
+      };
+    }
+    const deleteRulesScript = this.prepareDeleteScript(RULE_OBJECT);
+    result = await this.executeScript(exec, deleteRulesScript);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
+      return {
+        status: false,
+        out
+      };
+    }
+    const groupsInactiveScript = this.prepareInactiveScript(GROUP_OBJECT);
+    result = await this.executeScript(exec, groupsInactiveScript);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
+      return {
+        status: false,
+        out
+      };
+    }
+    const rulesInactiveScript = this.prepareInactiveScript(RULE_OBJECT);
+    result = await this.executeScript(exec, rulesInactiveScript);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
+      return {
+        status: false,
+        out
       };
     }
 
     return {
       status: true,
-      output
     };
   }
 
-  //
   public async process(input: DeploymentGroup, logger, conn) {
-    let scriptSuccess: boolean;
+    let result;
+
     const exec = new ExecuteService(conn);
-    const parseResult = [];
-    parseResult.push(await parseFile('/Users/vadimskuznecovs/work/cato-dev/drools/src/main/resources/rules/project-cato-0-pre-config-init.drl'));
-    // const rules = await input.filePaths.map(async (fil) => {
-    //   return await parseFile(fil);
-    // });
+    const parseResult = await this.parseDroolFiles(['/Users/vadimskuznecovs/work/cato-dev/drools/src/main/resources/rules/project-cato-0-pre-config-init.drl']);
 
-    const sfGroups = parseResult.flatMap(pr => pr.group).map((g) => {
-      return mapFieldsToSF(g, groupFieldMapping);
-    });
-
-    //----------------GROUP----------------//
-    console.log('group', sfGroups);
-
-    const insertGroup = this.prepareInsertScript('TestPriceRuleGroup__c', sfGroups);
-    scriptSuccess = await this.executeScript(exec, logger, '', insertGroup);
-    if (!scriptSuccess) {
+    result = await this.insertGroups(parseResult, exec);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
       return {
-        status: false
+        status: false,
+        out
       };
     }
-    //----------------GROUP----------------//
 
-    //----------------RULES----------------//
-    const insertedGroups = await this.fetchActiveRecords(exec.connection, 'TestPriceRuleGroup__c');
+    const insertedGroups = await this.fetchActiveRecords(exec.connection, GROUP_OBJECT);
+    result = await this.insertRules(exec, parseResult, insertedGroups);
+    if (!result.success) {
+      const out = this.formatDefault(result);
+      logger.log(out);
+      return {
+        status: false,
+        out,
+        insertedGroups: insertedGroups
+      };
+    }
+    console.log('success');
+    return {
+      status: true
+    };
+  }
 
-    const establishedGroupRelations = parseResult.map((pr) => {
-      console.log('pr', pr);
-      console.log('insertedGroups', insertedGroups);
-      const gropuId = insertedGroups.find((ig) => ig.Name === pr.group.label).Id;
+  private async insertRules(exec: ExecuteService, parseResult: any[], insertedGroups) {
+    const rulesToInsert = parseResult.flatMap((pr) => {
+      const groupId = insertedGroups.find((ig) => ig.Name === pr.group.label).Id;
       return {
         ...pr,
         rules: pr.rules.map(r => {
           return {
             ...r,
-            group: gropuId
+            group: groupId
           };
         })
       };
-    });
-
-    const allRules = establishedGroupRelations.flatMap(pr => pr.rules).map(r => {
-      return {
-        ...mapFieldsToSF(r, ruleFieldMapping),
-      };
-    });
-
-    console.log('rules', allRules);
-    const s = this.prepareInsertScript('TestVelocePriceRule__c', allRules);
-    console.log('re', s);
-    scriptSuccess = await this.executeScript(exec, logger, '', s);
-    if (!scriptSuccess) {
-      return {
-        status: false,
-        groupsToDelete: insertedGroups
-      };
-    }
-    const insertedRules = await this.fetchActiveRecords(exec.connection, 'TestVelocePriceRule__c');
-    if (insertedRules.length !== allRules.length) {
-      // fail :S
-      // rollback<
-    }
-    return undefined;
+    })
+      .flatMap(pr => pr.rules).map(r => {
+        return {
+          ...mapFieldsToSF(r, ruleFieldMapping),
+        };
+      });
+    const script = this.prepareInsertScript(RULE_OBJECT, rulesToInsert);
+    return await this.executeScript(exec, script);
   }
 
-  //
+  private async insertGroups(parseResult: any[], exec: ExecuteService) {
+    const sfGroups = parseResult.flatMap(pr => pr.group).map((g) => {
+      return mapFieldsToSF(g, groupFieldMapping);
+    });
+    const script = this.prepareInsertScript(GROUP_OBJECT, sfGroups);
+    return await this.executeScript(exec, script);
+  }
+
+  private async parseDroolFiles(filePaths) {
+    const parseResult = [];
+    for await(const file of filePaths) {
+      parseResult.push(await parseFile(file));
+    }
+    return parseResult;
+  }
+
+//
   // public rollback(files: string[], ctx: DeploymentCommandContext): DeploymentCommandContext {
   //   // delete uploaded data if any
   //   // restore inactives to active
@@ -186,16 +217,9 @@ export class DroolsDeploy extends DeploymentProcessorAdapter {
     `;
   }
 
-  private async executeScript(exec: ExecuteService, logger, output, script) {
+  private async executeScript(exec: ExecuteService, script) {
     const execAnonOptions = Object.assign({}, {apexCode: script});
-    const result = await exec.executeAnonymous(execAnonOptions);
-    if (!result.success) {
-      const out = this.formatDefault(result);
-      logger.log(out);
-      output += `${out}\n`;
-    }
-    console.log('res', result);
-    return result.success;
+    return await exec.executeAnonymous(execAnonOptions);
   }
 
   private async fetchActiveRecords(connection, objectName): Promise<Record[]> {
