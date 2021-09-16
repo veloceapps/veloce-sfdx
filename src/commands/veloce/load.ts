@@ -1,6 +1,14 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
+import { QueryResult} from "jsforce";
+import {Tooling} from "@salesforce/core/lib/connection";
+
+/* tslint:disable */
+const parse = require('csv-parse/lib/sync');
+const fs = require('fs');
+/* tslint:enable */
+let currentBatch = 0;
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -26,8 +34,24 @@ export default class Org extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    // flag with a value (-n, --name=VALUE)
-    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')})
+    sobjecttype: flags.string({
+      char: 's',
+      description: messages.getMessage('sobjecttypeFlagDescription'),
+      required: true
+    }),
+    externalid: flags.string({
+      char: 'i',
+      description: messages.getMessage('externalidFlagDescription'),
+      required: true
+    }),
+    idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false}),
+
+    printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
+    upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
+    file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
+    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
+    ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
+    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
   };
 
   // Comment this out if your command does not require an org username
@@ -39,50 +63,168 @@ export default class Org extends SfdxCommand {
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
 
+  public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger): Promise<QueryResult<unknown>> {
+    logger.debug('running query');
+
+    const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000});
+    logger.debug(`Query complete with ${result.totalSize} records returned`);
+    if (result.totalSize) {
+      logger.debug('fetching columns for query');
+    }
+    // remove nextRecordsUrl and force done to true
+    delete result.nextRecordsUrl;
+    result.done = true;
+    return result;
+  }
+
   public async run(): Promise<AnyJson> {
-    const name = this.flags.name || 'world';
+    let ok = true;
+    let output = '';
+    const batchSize = parseInt(this.flags.batch || 10, 10);
+    const sType = this.flags.sobjecttype;
+    const extId = this.flags.externalid;
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
+    const upsert = this.flags.upsert || false;
+    if (upsert == false) {
+      throw new SfdxError(`non-upsert mode is currently NOT SUPPORTED`, 'ApexError');
+    }
 
-    // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
+    if (!ignorefields.includes('Id')) {
+      ignorefields.push('Id');
+    }
+    if (!ignorefields.includes(extId) && !upsert) {
+      ignorefields.push(extId);
+    }
+
+    const fileContent = fs.readFileSync(this.flags.file);
+    let idmap;
+    try {
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+    } catch (err) {
+      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
+      idmap = {};
+    }
+    // retrieve types of args
     const conn = this.org.getConnection();
-    const query = 'Select Name, TrialExpirationDate from Organization';
+    const fieldsResult = await conn.autoFetchQuery(`
+SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
+    `, {autoFetch: true, maxFetch: 50000});
 
-    // The type we are querying for
-    interface Organization {
-      Name: string;
-      TrialExpirationDate: string;
+    for (const f of fieldsResult.records) {
+      const apiName = f['QualifiedApiName'];
+      const datatype = f['DataType'];
+      if (datatype.includes('Formula')) {
+        ignorefields.push(apiName);
+      }
     }
 
-    // Query the org
-    const result = await conn.query<Organization>(query);
+    const records = parse(fileContent, {columns: true, bom: true});
+    while (true) {
+      const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
+      console.log(`batch#${currentBatch} size: ${batch.length}`);
+      if (batch.length === 0) {
+        break;
+      }
+      const ids = [];
+      const extId2OldId = {};
+      batch.forEach(r => {
+        // Populate external ID from ID
+        if (!r[extId]) {
+          this.ux.log(`${r.Id}: Auto-populating ${extId} with ${r.Id}`);
+          r[extId] = r.Id;
+          // remove external ID from ignore fields
+          if (ignorefields.includes(extId)) {
+            const index = ignorefields.indexOf(extId);
+            if (index > -1) {
+              ignorefields.splice(index, 1);
+            }
+          }
+        }
+        ids.push(r[extId]);
+        extId2OldId[r[extId]] = r.Id;
+      });
 
-    // Organization will always return one result, but this is an example of throwing an error
-    // The output and --json will automatically be handled for you.
-    if (!result.records || result.records.length <= 0) {
-      throw new SfdxError(messages.getMessage('errorNoOrgResults', [this.org.getOrgId()]));
+      const objects = []
+      for (const r of batch) {
+        const obj: Record<string, string> = {};
+        for (const [k, value] of Object.entries(r)) {
+          let s = '' + value;
+          if (s === '' || ignorefields.includes(k)) {
+            continue;
+          }
+          if (idReplaceFields.includes(k)) {
+            for (const [key, v] of Object.entries(idmap)) {
+              const olds = s;
+              s = olds.replaceAll(key, v as string);
+              if (olds !== s) {
+                this.ux.log(`CONTENT: ${key} => ${v}`);
+              }
+            }
+          }
+          const m = idmap[s];
+          if (k !== extId && m) { // dont map ExternalID column!
+            s = m;
+          }
+          obj[k] = s
+        }
+        objects.push(obj)
+      }
+
+      const job = conn.bulk.createJob(this.flags.sobjecttype, 'upsert', {
+        extIdField: this.flags.externalid as string,
+        concurrencyMode: 'Serial',
+      });
+      job.on('error', (err): void => {
+        ok = false
+        this.ux.log(`Error: ${err}`)
+      });
+      const newBatch = job.createBatch();
+      newBatch.execute(objects)
+      await new Promise((resolve, reject) => {
+        newBatch.on("queue", (batchInfo) => {
+          const batchId = batchInfo.id;
+          const b = job.batch(batchId);
+          b.on('response', (res) => {
+            resolve(res);
+          });
+          b.on('error', (err) => {
+            ok = false
+            this.ux.log(`Error: ${err}`)
+            reject(err)
+          });
+          b.poll(5*1000, 300*1000);
+        });
+      });
+      // Query back Ids
+      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
+      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger);
+      if (!queryResult.done) {
+        throw new SfdxError(`Query not done: ${query}`, 'ApexError');
+      }
+      /* tslint:disable */
+      queryResult.records.forEach((r: any) => {
+        if (extId2OldId[r[extId]] && r.Id) {
+          if (extId2OldId[r[extId]] != r.Id) {
+            this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
+            idmap[extId2OldId[r[extId]]] = r.Id;
+          }
+        } else {
+          this.ux.log(`MISSING => ${r.Id}`);
+        }
+      });
+      /* tslint:enable */
+      currentBatch++;
     }
 
-    // Organization always only returns one result
-    const orgName = result.records[0].Name;
-    const trialExpirationDate = result.records[0].TrialExpirationDate;
-
-    let outputString = `Hello ${name}! This is org: ${orgName}`;
-    if (trialExpirationDate) {
-      const date = new Date(trialExpirationDate).toDateString();
-      outputString = `${outputString} and I will be around until ${date}!`;
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
+    if (!ok) {
+      throw new SfdxError(output, 'ApexError');
     }
-    this.ux.log(outputString);
-
-    // this.hubOrg is NOT guaranteed because supportsHubOrgUsername=true, as opposed to requiresHubOrgUsername.
-    if (this.hubOrg) {
-      const hubOrgId = this.hubOrg.getOrgId();
-      this.ux.log(`My hub org id is: ${hubOrgId}`);
-    }
-
-    if (this.flags.force && this.args.file) {
-      this.ux.log(`You input --force and a file: ${this.args.file}`);
-    }
-
+    this.ux.log('Data successfully loaded');
     // Return an object to be displayed with --json
-    return { orgId: this.org.getOrgId(), outputString };
+    return {orgId: this.org.getOrgId()};
   }
 }

@@ -1,8 +1,15 @@
 {
   "commandDescription": "Load data into org, by use of standard Salesforce API",
-  "nameFlagDescription": "name to print",
-  "fileFlagDescription": "csv file to load into salesforce",
+  "sobjecttypeFlagDescription": "The sObject type of the records you want to upsert.",
   "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",
-  "forceFlagDescription": "example boolean flag",
-  "errorNoOrgResults": "No results found for the org '%s'."
+  "upsertFlagDescription": "Should use APEX upsert (could insert extra records) or update-only APEX (one by one), which is default",
+  "externalidFlagDescription": "The column name of the external ID.",
+  "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
+  "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
+  "boolFieldsFlagDescription": "Coma separated list of boolean fields",
+  "dateFieldsFlagDescription": "Coma separated list of date fields",
+  "numericFieldsFlagDescription": "Coma separated list of boolean fields",
+  "idreplacefieldsFlagDescription": "Coma separated list of fields in which SF IDs are replaces by mapped Ids by using text search and replace",
+  "fileFlagDescription": "Full path to csv file",
+  "printidsFlagDescription": "Print External ID before attempting to update"
 }
