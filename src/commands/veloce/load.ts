@@ -1,8 +1,8 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
+import {Tooling} from '@salesforce/core/lib/connection';
 import { AnyJson } from '@salesforce/ts-types';
-import { QueryResult} from "jsforce";
-import {Tooling} from "@salesforce/core/lib/connection";
+import { QueryResult} from 'jsforce';
 
 /* tslint:disable */
 const parse = require('csv-parse/lib/sync');
@@ -51,7 +51,7 @@ export default class Org extends SfdxCommand {
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
-    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
+    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -79,15 +79,16 @@ export default class Org extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     let ok = true;
-    let output = '';
+    const output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
     const sType = this.flags.sobjecttype;
     const extId = this.flags.externalid;
     const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
     const upsert = this.flags.upsert || false;
-    if (upsert == false) {
-      throw new SfdxError(`non-upsert mode is currently NOT SUPPORTED`, 'ApexError');
+
+    if (upsert === false) {
+      throw new SfdxError('non-upsert mode is currently NOT SUPPORTED', 'ApexError');
     }
 
     if (!ignorefields.includes('Id')) {
@@ -147,7 +148,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         extId2OldId[r[extId]] = r.Id;
       });
 
-      const objects = []
+      const objects = [];
       for (const r of batch) {
         const obj: Record<string, string> = {};
         for (const [k, value] of Object.entries(r)) {
@@ -168,34 +169,34 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           if (k !== extId && m) { // dont map ExternalID column!
             s = m;
           }
-          obj[k] = s
+          obj[k] = s;
         }
-        objects.push(obj)
+        objects.push(obj);
       }
 
       const job = conn.bulk.createJob(this.flags.sobjecttype, 'upsert', {
         extIdField: this.flags.externalid as string,
-        concurrencyMode: 'Serial',
+        concurrencyMode: 'Serial'
       });
       job.on('error', (err): void => {
-        ok = false
-        this.ux.log(`Error: ${err}`)
+        ok = false;
+        this.ux.log(`Error: ${err}`);
       });
       const newBatch = job.createBatch();
-      newBatch.execute(objects)
+      newBatch.execute(objects);
       await new Promise((resolve, reject) => {
-        newBatch.on("queue", (batchInfo) => {
+        newBatch.on('queue', batchInfo => {
           const batchId = batchInfo.id;
           const b = job.batch(batchId);
-          b.on('response', (res) => {
+          b.on('response', res => {
             resolve(res);
           });
-          b.on('error', (err) => {
-            ok = false
-            this.ux.log(`Error: ${err}`)
-            reject(err)
+          b.on('error', err => {
+            ok = false;
+            this.ux.log(`Error: ${err}`);
+            reject(err);
           });
-          b.poll(5*1000, 300*1000);
+          b.poll(5 * 1000, 300 * 1000);
         });
       });
       // Query back Ids
