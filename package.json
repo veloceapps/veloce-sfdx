@@ -11,7 +11,7 @@
     "@salesforce/apex-node": "^0.1.21",
     "@salesforce/command": "^2",
     "@salesforce/core": "^2",
-    "csv-parse": "^4.15.3",
+    "csv-parse": "^4.16.2",
     "csv-write-stream": "^2.0.0",
     "csv-writer": "^1.6.0",
     "fast-xml-parser": "^3.19.0",
