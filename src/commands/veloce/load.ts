@@ -17,10 +17,6 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'load');
 
-const replaceAll = (str, find, replace) => {
-  return str.replace(new RegExp(find, 'g'), replace);
-};
-
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
@@ -163,7 +159,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           if (idReplaceFields.includes(k)) {
             for (const [key, v] of Object.entries(idmap)) {
               const olds = s;
-              s = replaceAll(olds, key, v as string);
+              s = olds.replaceAll(key, v as string);
               if (olds !== s) {
                 this.ux.log(`CONTENT: ${key} => ${v}`);
               }
