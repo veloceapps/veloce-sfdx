@@ -1,6 +1,7 @@
 import {flags, SfdxCommand} from '@salesforce/command';
 import {Messages} from '@salesforce/core';
 import {AnyJson} from '@salesforce/ts-types';
+import 'ts-replace-all';
 /* tslint:disable */
 const fs = require('fs');
 const csvWriter = require('csv-write-stream');
