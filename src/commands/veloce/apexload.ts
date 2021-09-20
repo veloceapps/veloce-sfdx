@@ -19,6 +19,10 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'apexload');
 
+const replaceAll = (str, find, replace) => {
+  return str.replace(new RegExp(find, 'g'), replace);
+};
+
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
@@ -154,7 +158,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           if (idReplaceFields.includes(k)) {
             for (const [key, v] of Object.entries(idmap)) {
               const olds = s;
-              s = olds.replaceAll(key, v as string);
+              s = replaceAll(olds, key, v as string);
               if (olds !== s) {
                 this.ux.log(`CONTENT: ${key} => ${v}`);
               }
@@ -177,11 +181,11 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
-            fields.push(`${upsert ? '' : 'o.'}${k}='${s
-              .replaceAll('\\', '\\\\')
-              .replaceAll('\'', '\\\'')
-              .replaceAll('\n', '\\n')
-              .replaceAll('\r', '\\r')}'`);
+            let replaced = replaceAll(s, '\\', '\\\\');
+            replaced = replaceAll(replaced, '\'', '\\\'');
+            replaced = replaceAll(replaced, '\n', '\\n');
+            replaced = replaceAll(replaced, '\r', '\\r');
+            fields.push(`${upsert ? '' : 'o.'}${k}='${replaced}'`);
           }
         }
         if (upsert) {

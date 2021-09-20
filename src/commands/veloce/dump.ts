@@ -25,6 +25,9 @@ const messages = Messages.loadMessages('veloce-sfdx', 'dump');
 /*
 
 */
+const replaceAll = (str, find, replace) => {
+  return str.replace(new RegExp(find, 'g'), replace);
+};
 
 export default class Org extends SfdxCommand {
 
@@ -173,7 +176,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
             let s = '' + value;
             for (const [k, v] of Object.entries(reverseIdmap)) {
               const olds = s;
-              s = olds.replaceAll(k, v as string);
+              s = replaceAll(olds, k, v as string);
               if (olds !== s) {
                 this.ux.log(`CONTENT: ${k} => ${v}`);
               }
