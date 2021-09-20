@@ -3,6 +3,7 @@ import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
 import {Tooling} from '@salesforce/core/lib/connection';
 import { AnyJson } from '@salesforce/ts-types';
 import { QueryResult} from 'jsforce';
+import 'ts-replace-all';
 
 /* tslint:disable */
 const parse = require('csv-parse/lib/sync');
