@@ -1,0 +1,5 @@
+{
+  "commandDescription": "Load metadata into org",
+  "testlevelFlagDescription": "(NoTestRun|RunSpecifiedTests|RunLocalTests|RunAllTestsInOrg) [default: NoTestRun] deployment testing level",
+  "useraliasFlagDescription": "username or alias for the target org"
+}
