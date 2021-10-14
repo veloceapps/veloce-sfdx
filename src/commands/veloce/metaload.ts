@@ -1,7 +1,8 @@
-import { Deploy } from "@salesforce/plugin-source/lib/commands/force/source/deploy";
-import {Messages} from "@salesforce/core";
-import {flags, SfdxCommand} from "@salesforce/command";
-import {AnyJson} from "@salesforce/ts-types";
+import {flags, SfdxCommand} from '@salesforce/command';
+import {Messages} from '@salesforce/core';
+import { Deploy } from '@salesforce/plugin-source/lib/commands/force/source/deploy';
+//import { Report } from '@salesforce/plugin-source/lib/commands/force/source/deploy/report'
+import {AnyJson} from '@salesforce/ts-types';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -24,7 +25,7 @@ export default class Org extends SfdxCommand {
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
     testlevel: flags.string({char: 'l', description: messages.getMessage('testlevelFlagDescription')}),
-    useralias: flags.string({char: "u", description: messages.getMessage('useraliasFlagDescription'), required: true})
+    useralias: flags.string({char: 'u', description: messages.getMessage('useraliasFlagDescription'), required: true})
   };
 
   // Comment this out if your command does not require an org username
@@ -39,11 +40,24 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     const deployCmdTestLevel = (this.flags.testlevel || 'NoTestRun').trim();
     const sfUserAlias = this.flags.useralias.trim();
-    const deployCmdConfig: any = {runHook: ()=>{}}; // new Deploy() fails if config has not runHook field
+    const deployCmdConfig: any = {runHook: () => {}}; // new Deploy() fails if config has not runHook field
     const deployCmd = new Deploy(
-      ["-p", "project-source/main/default/objects,project-source/main/default/classes", "-u", sfUserAlias, "-l", deployCmdTestLevel, "-w", "0"], deployCmdConfig
+      ['-p', 'project-source/main/default/objects,project-source/main/default/classes', '-u', sfUserAlias, '-l', deployCmdTestLevel, '-w', '0'], deployCmdConfig
     );
 
-    return deployCmd._run();
+    let deployJobID: string;
+
+    deployCmd._run().then(
+      (result) => {
+        deployJobID = result['id']
+      }
+    );
+
+    console.log(deployJobID);
+    // const deployReportCmdConfig: any = {}
+    // const deployReportCmd = new Report(
+    //   [], deployReportCmdConfig
+    // )
+    return {};
   }
 }

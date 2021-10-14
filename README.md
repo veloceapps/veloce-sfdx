@@ -45,6 +45,7 @@ USAGE
 * [`sfdx veloce:packrulesgroup -i <string> -o <string> [-P <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackrulesgroup--i-string--o-string--p-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:packui -n <string> -i <string> -o <string> -I <string> [-P <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepackui--n-string--i-string--o-string--i-string--p-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:permgen [-f <string>] [-s <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepermgen--f-string--s-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:sandbox [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocesandbox---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocesort--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
 ## `sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-P] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
@@ -719,6 +720,25 @@ EXAMPLES
 ```
 
 _See code: [lib/commands/veloce/permgen.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/permgen.js)_
+
+## `sfdx veloce:sandbox [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+Sandbox
+
+```
+Sandbox
+
+USAGE
+  $ sfdx veloce:sandbox [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+```
+
+_See code: [lib/commands/veloce/sandbox.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/sandbox.js)_
 
 ## `sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 

@@ -12,6 +12,7 @@
     "@salesforce/command": "^2",
     "@salesforce/core": "^2",
     "@salesforce/plugin-source": "^1.2.4",
+    "@salesforce/source-deploy-retrieve": "^4.5.11",
     "csv-parse": "^4.15.3",
     "csv-write-stream": "^2.0.0",
     "csv-writer": "^1.6.0",
