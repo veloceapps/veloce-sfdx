@@ -1,7 +1,7 @@
 import {flags, SfdxCommand} from '@salesforce/command';
 import {Messages} from '@salesforce/core';
 import { Deploy } from '@salesforce/plugin-source/lib/commands/force/source/deploy';
-//import { Report } from '@salesforce/plugin-source/lib/commands/force/source/deploy/report'
+// import { Report } from '@salesforce/plugin-source/lib/commands/force/source/deploy/report'
 import {AnyJson} from '@salesforce/ts-types';
 
 // Initialize Messages with the current plugin directory
@@ -40,6 +40,7 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     const deployCmdTestLevel = (this.flags.testlevel || 'NoTestRun').trim();
     const sfUserAlias = this.flags.useralias.trim();
+    /* tslint:disable */
     const deployCmdConfig: any = {runHook: () => {}}; // new Deploy() fails if config has not runHook field
     const deployCmd = new Deploy(
       ['-p', 'project-source/main/default/objects,project-source/main/default/classes', '-u', sfUserAlias, '-l', deployCmdTestLevel, '-w', '0'], deployCmdConfig
@@ -47,9 +48,8 @@ export default class Org extends SfdxCommand {
 
     let deployJobID: string;
 
-    deployCmd._run().then(
-      (result) => {
-        deployJobID = result['id']
+    deployCmd._run().then(result => {
+        deployJobID = result['id'];
       }
     );
 
@@ -59,5 +59,6 @@ export default class Org extends SfdxCommand {
     //   [], deployReportCmdConfig
     // )
     return {};
+    /* tslint:enable */
   }
 }
