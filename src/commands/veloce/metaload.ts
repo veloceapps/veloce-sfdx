@@ -1,35 +1,35 @@
 import {flags, SfdxCommand} from '@salesforce/command';
-import {Messages} from '@salesforce/core';
-import { Deploy } from '@salesforce/plugin-source/lib/commands/force/source/deploy';
-// import { Report } from '@salesforce/plugin-source/lib/commands/force/source/deploy/report'
+import {Connection, Messages, Org, User} from '@salesforce/core';
+import {ComponentSet} from '@salesforce/source-deploy-retrieve';
 import {AnyJson} from '@salesforce/ts-types';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('veloce-sfdx', 'metaload');
 
-export default class Org extends SfdxCommand {
+export default class VeloceOrg extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s Product2
-  Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  My hub org id is: 00Dxx000000001234
-  `,
-    `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com -s Product2
-  Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  `
+    `$ sfdx veloce:metaload
+      -u user-or-alias
+      -l RunLocalTests
+      -f project-source/main/default/objects
+      -f project-source/main/default/classes
+      -p project-source/main/default/permissionsets
+    `
   ];
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
     testlevel: flags.string({char: 'l', description: messages.getMessage('testlevelFlagDescription')}),
-    useralias: flags.string({char: 'u', description: messages.getMessage('useraliasFlagDescription'), required: true})
+    files: flags.string({char: 'f', description: messages.getMessage('filesFlagDescription'), multiple: true}),
+    permissionsets: flags.string({char: 'p', description: messages.getMessage('permissionsets'), multiple: true})
   };
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = false;
+  protected static requiresUsername = true;
 
   // Comment this out if your command does not support a hub org username
   protected static supportsDevhubUsername = false;
@@ -38,27 +38,60 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const deployCmdTestLevel = (this.flags.testlevel || 'NoTestRun').trim();
-    const sfUserAlias = this.flags.useralias.trim();
-    /* tslint:disable */
-    const deployCmdConfig: any = {runHook: () => {}}; // new Deploy() fails if config has not runHook field
-    const deployCmd = new Deploy(
-      ['-p', 'project-source/main/default/objects,project-source/main/default/classes', '-u', sfUserAlias, '-l', deployCmdTestLevel, '-w', '0'], deployCmdConfig
+    const deployTestLevel = (this.flags.testlevel || 'NoTestRun').trim();
+    const deploy = await ComponentSet
+      .fromSource(this.flags.files)
+      .deploy({usernameOrConnection: this.org.getUsername(), apiOptions: {
+        testLevel: deployTestLevel
+      }});
+
+    await deploy.pollStatus(5000, 180);
+    const deployResult = await this.org.getConnection().metadata.checkDeployStatus(deploy.id, true);
+
+    this.ux.log(`Showing results for ${deploy.id}`);
+    console.log(deployResult);
+    if (!deployResult.success) {
+      this.ux.log('Deploy failed, check results above ^^^');
+      process.exit(255);
+    }
+
+    const deploy2 = await ComponentSet
+      .fromSource(this.flags.permissionsets)
+      .deploy({usernameOrConnection: this.org.getUsername(), apiOptions: {
+        testLevel: deployTestLevel
+      }});
+
+    await deploy2.pollStatus(5000, 180);
+    const deployResult2 = await this.org.getConnection().metadata.checkDeployStatus(deploy2.id, true);
+    this.ux.log(`Showing results for ${deploy2.id}`);
+    console.log(deployResult2);
+    if (!deployResult2.success) {
+      this.ux.log('Deploy failed, check results above ^^^');
+      process.exit(255);
+    }
+
+    const connection: Connection = this.org.getConnection();
+    const org = await Org.create({ connection });
+    const user: User = await User.create({ org });
+    const queryResult = await connection.singleRecordQuery<{ Id: string }>(
+      `SELECT Id FROM User WHERE Username='${this.org.getUsername()}'`
     );
 
-    let deployJobID: string;
 
-    deployCmd._run().then(result => {
-        deployJobID = result['id'];
-      }
-    );
+    try {
+      await user.assignPermissionSets(queryResult.Id, ['Veloce_GP_Boarding']);
+    } catch (e) {
+      console.log(e);
+    }
 
-    console.log(deployJobID);
-    // const deployReportCmdConfig: any = {}
-    // const deployReportCmd = new Report(
-    //   [], deployReportCmdConfig
-    // )
+    try {
+      await user.assignPermissionSets(queryResult.Id, ['VeloceEcommerce']);
+    } catch (e) {
+      console.log(e);
+    }
+
+    this.ux.log('veloce:metaload completed!');
     return {};
-    /* tslint:enable */
   }
+
 }
