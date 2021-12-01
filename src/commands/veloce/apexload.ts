@@ -191,7 +191,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
-            if (this.flags.strict && SalesforceIdRegex.test(s)) {
+            if (this.flags.strict && SalesforceIdRegex.test(s) && k !== extId) {
               idsToValidate.push(s)
             }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
