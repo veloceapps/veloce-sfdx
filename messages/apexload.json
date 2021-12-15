@@ -6,10 +6,10 @@
   "externalidFlagDescription": "The column name of the external ID.",
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
-  "boolFieldsFlagDescription": "Coma separated list of boolean fields",
-  "dateFieldsFlagDescription": "Coma separated list of date fields",
-  "numericFieldsFlagDescription": "Coma separated list of boolean fields",
+  "strictFlagDescription": "Strict mode, to force validating IDs in salesforce ORG BEFORE inserting/updating records",
   "idreplacefieldsFlagDescription": "Coma separated list of fields in which SF IDs are replaces by mapped Ids by using text search and replace",
   "fileFlagDescription": "Full path to csv file",
-  "printidsFlagDescription": "Print External ID before attempting to update"
+  "printidsFlagDescription": "Print External ID before attempting to update",
+  "deprecatedFlagDescription": "DEPRECATED"
 }
+

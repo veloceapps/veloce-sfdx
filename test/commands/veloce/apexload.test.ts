@@ -26,4 +26,5 @@ describe('veloce:apexload', () => {
     .it('runs veloce:apexload --targetusername test@org.com', ctx => {
       expect(ctx.stdout).to.contain('');
     });
+
 });

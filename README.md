@@ -22,7 +22,11 @@ $ npm install -g veloce-sfdx
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
+<<<<<<< HEAD
 veloce-sfdx/1.0.56 darwin-x64 node-v14.17.6
+=======
+veloce-sfdx/1.0.58 darwin-x64 node-v16.13.0
+>>>>>>> master
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -30,7 +34,7 @@ USAGE
 ```
 <!-- usagestop -->
 <!-- commands -->
-* [`sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-P] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceapexload--s-string--i-string--f-string--i-string--r-string--p--u--o-string--b-string--b-string--d-string--n-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-S] [-P] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-veloceapexload--s-string--i-string--f-string--i-string--r-string--s--p--u--o-string--b-string--b-string--d-string--n-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-A] [-F <string>] [-w <string>] [-o <string>] [-R <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedump--s-string--i-string--f-string--i-string--a--f-string--w-string--o-string--r-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:dumpcontentdoc -i <string> -o <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedumpcontentdoc--i-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:dumpdoc -i <string> -o <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocedumpdoc--i-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
@@ -47,7 +51,7 @@ USAGE
 * [`sfdx veloce:permgen [-f <string>] [-s <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocepermgen--f-string--s-string--o-string--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-velocesort--n-string--f--v-string--u-string---apiversion-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
-## `sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-P] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+## `sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-S] [-P] [-U] [-o <string>] [-b <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
 Loads data into org, by creation of Anonymous apex code and it's execution. Operation is working in two modes: Update only (default) and Upsert --upsert. After each batch SOQL query is performed and ID Map file is populated with OldId=>NewId mappings
 
@@ -55,21 +59,18 @@ Loads data into org, by creation of Anonymous apex code and it's execution. Oper
 Loads data into org, by creation of Anonymous apex code and it's execution. Operation is working in two modes: Update only (default) and Upsert --upsert. After each batch SOQL query is performed and ID Map file is populated with OldId=>NewId mappings
 
 USAGE
-  $ sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-P] [-U] [-o <string>] [-b 
+  $ sfdx veloce:apexload -s <string> -i <string> -f <string> -I <string> [-R <string>] [-S] [-P] [-U] [-o <string>] [-b 
   <string>] [-B <string>] [-D <string>] [-N <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] 
   [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -B, --boolfields=boolfields                                                       Coma separated list of boolean
-                                                                                    fields
-
-  -D, --datefields=datefields                                                       Coma separated list of date fields
+  -B, --boolfields=boolfields                                                       DEPRECATED
+  -D, --datefields=datefields                                                       DEPRECATED
 
   -I, --idmap=idmap                                                                 (required) idmap.json file path, to
                                                                                     store/load <csvId:targetId> pairs
 
-  -N, --numericfields=numericfields                                                 Coma separated list of boolean
-                                                                                    fields
+  -N, --numericfields=numericfields                                                 DEPRECATED
 
   -P, --printids                                                                    Print External ID before attempting
                                                                                     to update
@@ -77,6 +78,10 @@ OPTIONS
   -R, --idreplacefields=idreplacefields                                             Coma separated list of fields in
                                                                                     which SF IDs are replaces by mapped
                                                                                     Ids by using text search and replace
+
+  -S, --strict                                                                      Strict mode, to force validating IDs
+                                                                                    in salesforce ORG BEFORE
+                                                                                    inserting/updating records
 
   -U, --upsert                                                                      Should use APEX upsert (could insert
                                                                                     extra records) or update-only APEX
@@ -114,7 +119,11 @@ EXAMPLE
   $ sfdx veloce:apexload -u gp01 -s PricebookEntry -i sfxId__c -f ./data/insert.csv
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/apexload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/apexload.js)_
+=======
+_See code: [lib/commands/veloce/apexload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/apexload.js)_
+>>>>>>> master
 
 ## `sfdx veloce:dump -s <string> -I <string> -f <string> [-i <string>] [-A] [-F <string>] [-w <string>] [-o <string>] [-R <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -180,7 +189,11 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/dump.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/dump.js)_
+=======
+_See code: [lib/commands/veloce/dump.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/dump.js)_
+>>>>>>> master
 
 ## `sfdx veloce:dumpcontentdoc -i <string> -o <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -220,7 +233,11 @@ EXAMPLES
   $ sfdx veloce:dumpcontentdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/dumpcontentdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/dumpcontentdoc.js)_
+=======
+_See code: [lib/commands/veloce/dumpcontentdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/dumpcontentdoc.js)_
+>>>>>>> master
 
 ## `sfdx veloce:dumpdoc -i <string> -o <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -260,7 +277,11 @@ EXAMPLES
   $ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/dumpdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/dumpdoc.js)_
+=======
+_See code: [lib/commands/veloce/dumpdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/dumpdoc.js)_
+>>>>>>> master
 
 ## `sfdx veloce:load -s <string> -i <string> -f <string> -I <string> [-R <string>] [-P] [-U] [-o <string>] [-b <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -326,7 +347,11 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/load.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/load.js)_
+=======
+_See code: [lib/commands/veloce/load.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/load.js)_
+>>>>>>> master
 
 ## `sfdx veloce:loadcontentdoc -I <string> -i <string> -n <string> -d <string> -f <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -376,7 +401,11 @@ EXAMPLES
      Document content here
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/loadcontentdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/loadcontentdoc.js)_
+=======
+_See code: [lib/commands/veloce/loadcontentdoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/loadcontentdoc.js)_
+>>>>>>> master
 
 ## `sfdx veloce:loaddoc -I <string> -i <string> -n <string> -F <string> -f <string> [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -426,7 +455,11 @@ EXAMPLES
      Document content here
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/loaddoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/loaddoc.js)_
+=======
+_See code: [lib/commands/veloce/loaddoc.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/loaddoc.js)_
+>>>>>>> master
 
 ## `sfdx veloce:login -p <string> -a <string> -u <string> -r <string> [-s <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -461,6 +494,7 @@ EXAMPLE
   $ sfdx veloce:login -u username -p ./PASSWORDFILE -a alias01
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/login.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/login.js)_
 
 ## `sfdx veloce:metaload [-l <string>] [-f <string>] [-p <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
@@ -504,6 +538,9 @@ EXAMPLE
 ```
 
 _See code: [lib/commands/veloce/metaload.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/metaload.js)_
+=======
+_See code: [lib/commands/veloce/login.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/login.js)_
+>>>>>>> master
 
 ## `sfdx veloce:packconfig -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -538,7 +575,11 @@ EXAMPLES
     }
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/packconfig.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/packconfig.js)_
+=======
+_See code: [lib/commands/veloce/packconfig.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/packconfig.js)_
+>>>>>>> master
 
 ## `sfdx veloce:packpricelist -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -567,7 +608,11 @@ EXAMPLE
   $ sfdx veloce:packpricelist -i ./project-cato-pricelist.json -o ./VELOCPQ__PriceList__c.csv
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/packpricelist.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/packpricelist.js)_
+=======
+_See code: [lib/commands/veloce/packpricelist.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/packpricelist.js)_
+>>>>>>> master
 
 ## `sfdx veloce:packrules -i <string> -o <string> [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -598,7 +643,11 @@ EXAMPLES
   project-cato-10-pre-config.drl VELOCPQ__PriceRuleGroupId__c will be project-cato-10-pre-config
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/packrules.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/packrules.js)_
+=======
+_See code: [lib/commands/veloce/packrules.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/packrules.js)_
+>>>>>>> master
 
 ## `sfdx veloce:packrulesgroup -i <string> -o <string> [-P <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -639,7 +688,11 @@ EXAMPLES
   }
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/packrulesgroup.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/packrulesgroup.js)_
+=======
+_See code: [lib/commands/veloce/packrulesgroup.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/packrulesgroup.js)_
+>>>>>>> master
 
 ## `sfdx veloce:packui -n <string> -i <string> -o <string> -I <string> [-P <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -677,7 +730,11 @@ EXAMPLE
   $ sfdx veloce:packui --inputdir . -n BOARDING --outputfile metadata_new.json
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/packui.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/packui.js)_
+=======
+_See code: [lib/commands/veloce/packui.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/packui.js)_
+>>>>>>> master
 
 ## `sfdx veloce:permgen [-f <string>] [-s <string>] [-o <string>] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -724,7 +781,11 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/permgen.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/permgen.js)_
+=======
+_See code: [lib/commands/veloce/permgen.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/permgen.js)_
+>>>>>>> master
 
 ## `sfdx veloce:sort [-n <string>] [-f] [-v <string>] [-u <string>] [--apiversion <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -764,7 +825,11 @@ EXAMPLES
      Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
 ```
 
+<<<<<<< HEAD
 _See code: [lib/commands/veloce/sort.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.56/lib/commands/veloce/sort.js)_
+=======
+_See code: [lib/commands/veloce/sort.js](https://github.com/veloceapps/veloce-sfdx/blob/v1.0.58/lib/commands/veloce/sort.js)_
+>>>>>>> master
 <!-- commandsstop -->
 <!-- debugging-your-plugin -->
 # Debugging your plugin

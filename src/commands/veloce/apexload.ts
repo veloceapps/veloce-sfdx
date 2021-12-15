@@ -18,6 +18,37 @@ Messages.importMessagesDirectory(__dirname);
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'apexload');
+const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$');
+
+const validSFID = (input: string): boolean => {
+  // https://stackoverflow.com/a/29299786/1333724
+  if (!salesforceIdRegex.test(input)) {
+    return false;
+  }
+  const parts = [input.substr(0, 5),
+    input.substr(5, 5),
+    input.substr(10, 5)];
+  const chars: number[] = [0, 0, 0];
+  for (let j = 0; j < parts.length; j++) {
+    const word = parts[j];
+    for (let i = 0; i < word.length; i++) {
+      const char = word.charCodeAt(i);
+      if (char >= 65 && char <= 90) {
+        chars[j] += 1 << i;
+      }
+    }
+  }
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c <= 25) {
+      chars[i] = c + 65;
+    } else {
+      chars[i] = c - 25 + 48;
+    }
+  }
+
+  return (String.fromCharCode(chars[0], chars[1], chars[2])) === input.substr(15, 3);
+};
 
 export default class Org extends SfdxCommand {
 
@@ -46,15 +77,17 @@ export default class Org extends SfdxCommand {
     }),
     idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false}),
 
+    strict: flags.boolean({char: 'S', description: messages.getMessage('strictFlagDescription'), required: false}),
     printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
-    boolfields: flags.string({char: 'B', description: messages.getMessage('boolFieldsFlagDescription')}),
-    datefields: flags.string({char: 'D', description: messages.getMessage('dateFieldsFlagDescription')}),
-    numericfields: flags.string({char: 'N', description: messages.getMessage('numericFieldsFlagDescription')})
+    /* Deprected Args: */
+    boolfields: flags.string({char: 'B', description: messages.getMessage('deprecatedFlagDescription')}),
+    datefields: flags.string({char: 'D', description: messages.getMessage('deprecatedFlagDescription')}),
+    numericfields: flags.string({char: 'N', description: messages.getMessage('deprecatedFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -67,6 +100,16 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
+    if (this.flags.boolfields) {
+      this.ux.warn('-B or --boolfields arg is DEPRECATED, types are inferred automatically! please remove');
+    }
+    if (this.flags.datefields) {
+      this.ux.warn('-D or --datefields arg is DEPRECATED, types are inferred automatically! please remove');
+    }
+    if (this.flags.numericfields) {
+      this.ux.warn('-N or --numericfields arg is DEPRECATED, types are inferred automatically! please remove');
+    }
+
     let ok = true;
     let output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
@@ -82,9 +125,9 @@ export default class Org extends SfdxCommand {
     if (!ignorefields.includes(extId) && !upsert) {
       ignorefields.push(extId);
     }
-    const boolfields = this.flags.boolfields ? this.flags.boolfields.split(',') : [];
-    const datefields = this.flags.datefields ? this.flags.datefields.split(',') : [];
-    const numericfields = this.flags.numericfields ? this.flags.numericfields.split(',') : [];
+    const boolfields = [];
+    const datefields = [];
+    const numericfields = [];
 
     const fileContent = fs.readFileSync(this.flags.file);
     let idmap;
@@ -144,6 +187,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       });
       let script = '';
       let objects = '';
+      const idsToValidate = [];
       for (const r of batch) {
         const fields = [];
         for (const [k, value] of Object.entries(r)) {
@@ -177,6 +221,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
+            if (this.flags.strict && k !== extId && validSFID(s) ) {
+              idsToValidate.push(s);
+            }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
               .replaceAll('\\', '\\\\')
               .replaceAll('\'', '\\\'')
@@ -185,10 +232,16 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
         if (upsert) {
+          for (const vid of idsToValidate) {
+            objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`;
+          }
           objects += `o.add(new ${sType} (${fields.join(',')}));\n`;
         } else {
           if (this.flags.printids) {
             this.ux.log(`ID: ${extId} = ${r[extId]}`);
+          }
+          for (const vid of idsToValidate) {
+            objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\');\n`;
           }
           objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`;
           objects += `${fields.join(';')};\n`;
