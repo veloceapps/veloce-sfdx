@@ -113,14 +113,14 @@ export default class Org extends SfdxCommand {
     let ok = true;
     let output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
-    const sType = this.flags.sobjecttype;
-    const extId = this.flags.externalid;
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
-    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
+    const sType = this.flags.sobjecttype.toLowerCase();
+    const extId = this.flags.externalid.toLowerCase();
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : [];
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : [];
     const upsert = this.flags.upsert || false;
 
-    if (!ignorefields.includes('Id')) {
-      ignorefields.push('Id');
+    if (!ignorefields.includes('id')) {
+      ignorefields.push('id');
     }
     if (!ignorefields.includes(extId) && !upsert) {
       ignorefields.push(extId);
@@ -199,7 +199,18 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       let script = '';
       let objects = '';
       const idsToValidate = [];
-      for (const r of batch) {
+      for (const rWithCase of batch) {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
         const fields = [];
         for (const [k, value] of Object.entries(r)) {
           let s = '' + value;
