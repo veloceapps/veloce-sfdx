@@ -272,6 +272,10 @@ ${objects}
         const out = this.formatDefault(result);
         this.ux.log(out);
         output += `${out}\n`;
+        this.ux.log("Executed Script START");
+        this.ux.log(script);
+        this.ux.log("Executed Script END");
+        output += `${out}\n`;
       }
       // Query back Ids
       const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
