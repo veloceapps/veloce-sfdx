@@ -306,7 +306,18 @@ ${objects}
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
       }
       /* tslint:disable */
-      queryResult.records.forEach((r: any) => {
+      queryResult.records.forEach((rWithCase: any) => {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
         if (extId2OldId[r[extId]] && r.id) {
           if (extId2OldId[r[extId]] != r.id) {
             this.ux.log(`${extId2OldId[r[extId]]} => ${r.id}`);
