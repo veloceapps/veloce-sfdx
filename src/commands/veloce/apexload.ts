@@ -147,7 +147,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
     `, {autoFetch: true, maxFetch: 50000});
 
     for (const f of fieldsResult.records) {
-      const apiName = f['QualifiedApiName'];
+      const apiName = f['QualifiedApiName'].toLowerCase();
       const datatype = f['DataType'];
       if (datatype.includes('Formula')) {
         ignorefields.push(apiName);
@@ -169,11 +169,22 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       }
       const ids = [];
       const extId2OldId = {};
-      batch.forEach(r => {
+      batch.forEach(rWithCase => {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
         // Populate external ID from ID
         if (!r[extId]) {
-          this.ux.log(`${r.Id}: Auto-populating ${extId} with ${r.Id}`);
-          r[extId] = r.Id;
+          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`);
+          r[extId] = r.id;
           // remove external ID from ignore fields
           if (ignorefields.includes(extId)) {
             const index = ignorefields.indexOf(extId);
@@ -183,7 +194,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
         ids.push(r[extId]);
-        extId2OldId[r[extId]] = r.Id;
+        extId2OldId[r[extId]] = r.id;
       });
       let script = '';
       let objects = '';
@@ -272,9 +283,9 @@ ${objects}
         const out = this.formatDefault(result);
         this.ux.log(out);
         output += `${out}\n`;
-        this.ux.log("Executed Script START");
+        this.ux.log('Executed Script START');
         this.ux.log(script);
-        this.ux.log("Executed Script END");
+        this.ux.log('Executed Script END');
         output += `${out}\n`;
       }
       // Query back Ids
@@ -285,13 +296,13 @@ ${objects}
       }
       /* tslint:disable */
       queryResult.records.forEach((r: any) => {
-        if (extId2OldId[r[extId]] && r.Id) {
-          if (extId2OldId[r[extId]] != r.Id) {
-            this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
-            idmap[extId2OldId[r[extId]]] = r.Id;
+        if (extId2OldId[r[extId]] && r.id) {
+          if (extId2OldId[r[extId]] != r.id) {
+            this.ux.log(`${extId2OldId[r[extId]]} => ${r.id}`);
+            idmap[extId2OldId[r[extId]]] = r.id;
           }
         } else {
-          this.ux.log(`MISSING => ${r.Id}`);
+          this.ux.log(`MISSING => ${r.id}`);
         }
       });
       /* tslint:enable */
