@@ -176,7 +176,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         const obj: Record<string, string> = {};
         for (const [k, value] of Object.entries(r)) {
           let s = '' + value;
-          if (s === '' || ignorefields.includes(k)) {
+          if (ignorefields.includes(k)) {
             continue;
           }
           if (idReplaceFields.includes(k)) {
