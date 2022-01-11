@@ -82,18 +82,18 @@ export default class Org extends SfdxCommand {
     let ok = true;
     const output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
-    const sType = this.flags.sobjecttype;
-    const extId = this.flags.externalid;
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
-    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.split(',') : [];
+    const sType = this.flags.sobjecttype.toLowerCase();
+    const extId = this.flags.externalid.toLowerCase();
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : [];
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : [];
     const upsert = this.flags.upsert || false;
 
     if (upsert === false) {
       throw new SfdxError('non-upsert mode is currently NOT SUPPORTED', 'ApexError');
     }
 
-    if (!ignorefields.includes('Id')) {
-      ignorefields.push('Id');
+    if (!ignorefields.includes('id')) {
+      ignorefields.push('id');
     }
     if (!ignorefields.includes(extId) && !upsert) {
       ignorefields.push(extId);
@@ -119,7 +119,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       const apiName = f['QualifiedApiName'];
       const datatype = f['DataType'];
       if (datatype.includes('Formula')) {
-        ignorefields.push(apiName);
+        ignorefields.push(apiName.toLowerCase());
       }
     }
 
@@ -132,11 +132,22 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       }
       const ids = [];
       const extId2OldId = {};
-      batch.forEach(r => {
+      batch.forEach(rWithCase => {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
         // Populate external ID from ID
         if (!r[extId]) {
-          this.ux.log(`${r.Id}: Auto-populating ${extId} with ${r.Id}`);
-          r[extId] = r.Id;
+          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`);
+          r[extId] = r.id;
           // remove external ID from ignore fields
           if (ignorefields.includes(extId)) {
             const index = ignorefields.indexOf(extId);
@@ -146,11 +157,22 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
         ids.push(r[extId]);
-        extId2OldId[r[extId]] = r.Id;
+        extId2OldId[r[extId]] = r.id;
       });
 
       const objects = [];
-      for (const r of batch) {
+      for (const rWithCase of batch) {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
         const obj: Record<string, string> = {};
         for (const [k, value] of Object.entries(r)) {
           let s = '' + value;
@@ -207,14 +229,25 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
       }
       /* tslint:disable */
-      queryResult.records.forEach((r: any) => {
-        if (extId2OldId[r[extId]] && r.Id) {
-          if (extId2OldId[r[extId]] != r.Id) {
-            this.ux.log(`${extId2OldId[r[extId]]} => ${r.Id}`);
-            idmap[extId2OldId[r[extId]]] = r.Id;
+      queryResult.records.forEach((rWithCase: any) => {
+        // convert keys to lowercase
+        const keys = Object.keys(rWithCase);
+        let n = keys.length;
+
+        /* tslint:disable-next-line */
+        const r: any = {};
+        while (n--) {
+          const key = keys[n];
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+
+        if (extId2OldId[r[extId]] && r.id) {
+          if (extId2OldId[r[extId]] != r.id) {
+            this.ux.log(`${extId2OldId[r[extId]]} => ${r.id}`);
+            idmap[extId2OldId[r[extId]]] = r.id;
           }
         } else {
-          this.ux.log(`MISSING => ${r.Id}`);
+          this.ux.log(`MISSING => ${r.id}`);
         }
       });
       /* tslint:enable */
