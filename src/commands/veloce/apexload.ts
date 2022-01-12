@@ -99,45 +99,44 @@ export default class Org extends SfdxCommand {
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
 
-
   public async run(): Promise<AnyJson> {
      const knownIdFields = [
       'velocpq__propertymapid__c',
       'velocpq__pricebookid__c'
-    ]
+    ];
 
-    if (this.flags.boolfields) {
+     if (this.flags.boolfields) {
       this.ux.warn('-B or --boolfields arg is DEPRECATED, types are inferred automatically! please remove');
     }
-    if (this.flags.datefields) {
+     if (this.flags.datefields) {
       this.ux.warn('-D or --datefields arg is DEPRECATED, types are inferred automatically! please remove');
     }
-    if (this.flags.numericfields) {
+     if (this.flags.numericfields) {
       this.ux.warn('-N or --numericfields arg is DEPRECATED, types are inferred automatically! please remove');
     }
 
-    let ok = true;
-    let output = '';
-    const batchSize = parseInt(this.flags.batch || 10, 10);
-    const sType = this.flags.sobjecttype.toLowerCase();
-    const extId = this.flags.externalid.toLowerCase();
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : [];
-    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : [];
-    const upsert = this.flags.upsert || false;
+     let ok = true;
+     let output = '';
+     const batchSize = parseInt(this.flags.batch || 10, 10);
+     const sType = this.flags.sobjecttype.toLowerCase();
+     const extId = this.flags.externalid.toLowerCase();
+     const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : [];
+     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : [];
+     const upsert = this.flags.upsert || false;
 
-    if (!ignorefields.includes('id')) {
+     if (!ignorefields.includes('id')) {
       ignorefields.push('id');
     }
-    if (!ignorefields.includes(extId) && !upsert) {
+     if (!ignorefields.includes(extId) && !upsert) {
       ignorefields.push(extId);
     }
-    const boolfields = [];
-    const datefields = [];
-    const numericfields = [];
+     const boolfields = [];
+     const datefields = [];
+     const numericfields = [];
 
-    const fileContent = fs.readFileSync(this.flags.file);
-    let idmap;
-    try {
+     const fileContent = fs.readFileSync(this.flags.file);
+     let idmap;
+     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
     } catch (err) {
       this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
@@ -145,14 +144,14 @@ export default class Org extends SfdxCommand {
     }
 
     // retrieve types of args
-    const conn = this.org.getConnection();
-    const fieldsResult = await conn.autoFetchQuery(`
+     const conn = this.org.getConnection();
+     const fieldsResult = await conn.autoFetchQuery(`
 SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000});
 
-    for (const f of fieldsResult.records) {
+     for (const f of fieldsResult.records) {
       const apiName = f['QualifiedApiName'].toLowerCase();
       const datatype = f['DataType'];
       if (datatype.includes('Formula')) {
@@ -166,7 +165,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       }
     }
 
-    const records = parse(fileContent, {columns: true, bom: true});
+     const records = parse(fileContent, {columns: true, bom: true});
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
       console.log(`batch#${currentBatch} size: ${batch.length}`);
@@ -344,13 +343,13 @@ ${objects}
       currentBatch++;
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
-    if (!ok) {
+     fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
+     if (!ok) {
       throw new SfdxError(output, 'ApexError');
     }
-    this.ux.log('Data successfully loaded');
+     this.ux.log('Data successfully loaded');
     // Return an object to be displayed with --json
-    return {orgId: this.org.getOrgId()};
+     return {orgId: this.org.getOrgId()};
   }
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
