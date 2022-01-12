@@ -239,7 +239,11 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
               fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
             }
           } else if (datefields.includes(k)) {
-            fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`);
+            if (s === '') {
+              fields.push(`${upsert ? '' : 'o.'}${k}=null`);
+            } else {
+              fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`);
+            }
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
