@@ -99,7 +99,13 @@ export default class Org extends SfdxCommand {
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
 
+
   public async run(): Promise<AnyJson> {
+     const knownIdFields = [
+      'velocpq__propertymapid__c',
+      'velocpq__pricebookid__c'
+    ]
+
     if (this.flags.boolfields) {
       this.ux.warn('-B or --boolfields arg is DEPRECATED, types are inferred automatically! please remove');
     }
@@ -249,6 +255,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           } else {
             if (this.flags.strict && k !== extId && validSFID(s) ) {
               idsToValidate.push(s);
+            }
+            if (knownIdFields.includes(k) && s === '') {
+              fields.push(`${upsert ? '' : 'o.'}${k}=null`);
             }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
               .replaceAll('\\', '\\\\')
