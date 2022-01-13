@@ -104,10 +104,6 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const knownIdFields = [
-      'velocpq__propertymapid__c',
-      'velocpq__pricebookid__c'
-    ];
 
     if (this.flags.boolfields) {
       this.ux.warn('-B or --boolfields arg is DEPRECATED, types are inferred automatically! please remove');
@@ -240,7 +236,9 @@ export default class Org extends SfdxCommand {
           if (k !== extId && m) { // dont map ExternalID column!
             s = m;
           }
-          if (boolfields.includes(k)) {
+          if (s === '') {
+            fields.push(`${upsert ? '' : 'o.'}${k}=null`);
+          } else if (boolfields.includes(k)) {
             if (s === '1') {
               fields.push(`${upsert ? '' : 'o.'}${k}=true`);
             } else if (s === '0') {
@@ -249,25 +247,18 @@ export default class Org extends SfdxCommand {
               fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
             }
           } else if (datefields.includes(k)) {
-            if (s === '') {
-              fields.push(`${upsert ? '' : 'o.'}${k}=null`);
-            } else {
-              fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`);
-            }
+            fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`);
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
             if (this.flags.strict && k !== extId && validSFID(s)) {
               idsToValidate.push(s);
             }
-            if (knownIdFields.includes(k) && s === '') {
-              fields.push(`${upsert ? '' : 'o.'}${k}=null`);
-            }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
-              .replaceAll('\\', '\\\\')
-              .replaceAll('\'', '\\\'')
-              .replaceAll('\n', '\\n')
-              .replaceAll('\r', '\\r')}'`);
+                .replaceAll('\\', '\\\\')
+                .replaceAll('\'', '\\\'')
+                .replaceAll('\n', '\\n')
+                .replaceAll('\r', '\\r')}'`);
           }
         }
         if (upsert) {
