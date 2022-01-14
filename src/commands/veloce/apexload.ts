@@ -146,10 +146,9 @@ export default class Org extends SfdxCommand {
     // retrieve types of args
     const conn = this.org.getConnection();
     const fieldsResult = await conn.autoFetchQuery(`
-      SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
-      FROM FieldDefinition
-      WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
-      ORDER BY QualifiedApiName
+SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000});
 
     for (const f of fieldsResult.records) {
@@ -308,9 +307,7 @@ ${objects}
         output += `${out}\n`;
       }
       // Query back Ids
-      const query = `SELECT Id, ${extId}
-                     FROM ${sType}
-                     WHERE ${extId} in ('${ids.join('\',\'')}')`;
+      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
       const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger);
       if (!queryResult.done) {
         throw new SfdxError(`Query not done: ${query}`, 'ApexError');
