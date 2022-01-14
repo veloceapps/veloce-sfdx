@@ -141,7 +141,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         const r: any = {};
         while (n--) {
           const key = keys[n];
-          r[key.toLowerCase()] = rWithCase[key];
+          if (key) {
+            r[key.toLowerCase()] = rWithCase[key];
+          }
         }
 
         // Populate external ID from ID
@@ -170,7 +172,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         const r: any = {};
         while (n--) {
           const key = keys[n];
-          r[key.toLowerCase()] = rWithCase[key];
+          if (key) {
+            r[key.toLowerCase()] = rWithCase[key];
+          }
         }
 
         const obj: Record<string, string> = {};
@@ -238,7 +242,9 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         const r: any = {};
         while (n--) {
           const key = keys[n];
-          r[key.toLowerCase()] = rWithCase[key];
+          if (key) {
+            r[key.toLowerCase()] = rWithCase[key];
+          }
         }
 
         if (extId2OldId[r[extId]] && r.id) {
