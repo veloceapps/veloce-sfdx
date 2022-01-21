@@ -14,19 +14,6 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'dump');
 
-// const SYSTEM_DATE_FIELDS = [
-//   'CreatedDate',
-//   'LastModifiedDate',
-//   'SystemModstamp',
-//   'LastViewedDate',
-//   'LastReferencedDate',
-// ];
-// based on this: https://github.com/salesforcecli/data/tree/main/packages/plugin-data/src/commands/force/data
-
-/*
-
-*/
-
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');

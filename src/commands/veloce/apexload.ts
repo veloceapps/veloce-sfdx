@@ -81,17 +81,12 @@ export default class Org extends SfdxCommand {
       required: false
     }),
 
-    strict: flags.boolean({char: 'S', description: messages.getMessage('strictFlagDescription'), required: false}),
     printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
-    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')}),
-    /* Deprected Args: */
-    boolfields: flags.string({char: 'B', description: messages.getMessage('deprecatedFlagDescription')}),
-    datefields: flags.string({char: 'D', description: messages.getMessage('deprecatedFlagDescription')}),
-    numericfields: flags.string({char: 'N', description: messages.getMessage('deprecatedFlagDescription')})
+    batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')})
   };
 
   // Comment this out if your command does not require an org username
@@ -104,17 +99,6 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-
-    if (this.flags.boolfields) {
-      this.ux.warn('-B or --boolfields arg is DEPRECATED, types are inferred automatically! please remove');
-    }
-    if (this.flags.datefields) {
-      this.ux.warn('-D or --datefields arg is DEPRECATED, types are inferred automatically! please remove');
-    }
-    if (this.flags.numericfields) {
-      this.ux.warn('-N or --numericfields arg is DEPRECATED, types are inferred automatically! please remove');
-    }
-
     let ok = true;
     let output = '';
     const batchSize = parseInt(this.flags.batch || 10, 10);
@@ -166,6 +150,39 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
     }
 
     const records = parse(fileContent, {columns: true, bom: true});
+
+    let hasFailedExtIds = false;
+    const seenExtIds = [];
+
+    records.forEach(rWithCase => {
+      // convert keys to lowercase
+      const keys = Object.keys(rWithCase);
+      let n = keys.length;
+
+      /* tslint:disable-next-line */
+      const r: any = {};
+      while (n--) {
+        const key = keys[n];
+        if (key) {
+          r[key.toLowerCase()] = rWithCase[key];
+        }
+      }
+      if (r[extId] && seenExtIds.includes(r[extId])) {
+        this.ux.log(`${r.id}: Duplicated Value ${r[extId]} for key ${extId}, External IDs MUST be unique across the file`);
+        hasFailedExtIds = true;
+      }
+      // Fail if id's are empty
+      if (!r[extId]) {
+        this.ux.log(`${r.id}: ${extId} is empty please populate with some truly unique ID and proceed`);
+        hasFailedExtIds = true;
+      } else {
+        seenExtIds.push(r[extId]);
+      }
+    });
+    if (hasFailedExtIds) {
+      throw new SfdxError(`Failed because at least one ${extId} (duplicate or empty)`);
+    }
+
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
       console.log(`batch#${currentBatch} size: ${batch.length}`);
@@ -185,19 +202,6 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           const key = keys[n];
           if (key) {
             r[key.toLowerCase()] = rWithCase[key];
-          }
-        }
-
-        // Populate external ID from ID
-        if (!r[extId]) {
-          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`);
-          r[extId] = r.id;
-          // remove external ID from ignore fields
-          if (ignorefields.includes(extId)) {
-            const index = ignorefields.indexOf(extId);
-            if (index > -1) {
-              ignorefields.splice(index, 1);
-            }
           }
         }
         ids.push(r[extId]);
@@ -254,7 +258,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`);
           } else {
-            if (this.flags.strict && k !== extId && validSFID(s)) {
+            if (k !== extId && validSFID(s)) {
               idsToValidate.push(s);
             }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
