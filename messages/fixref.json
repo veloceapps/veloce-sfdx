@@ -1,0 +1,4 @@
+{
+    "commandDescription": "Fix sobjects external id if empty",
+    "performFlagDescription": "Perform filling of empty external reference id fields"
+  }
