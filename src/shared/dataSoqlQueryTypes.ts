@@ -5,8 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Optional } from '@salesforce/ts-types';
-import { QueryResult } from 'jsforce';
+import { Optional } from '@salesforce/ts-types'
+import { QueryResult } from 'jsforce'
 
 // eslint-disable-next-line no-shadow
 export enum FieldType {
@@ -19,10 +19,10 @@ export enum FieldType {
  * interface to represent a field when describing the fields that make up a query result
  */
 export interface Field {
-  fieldType: FieldType;
-  name: string;
-  fields?: Field[];
-  alias?: Optional<string>;
+  fieldType: FieldType
+  name: string
+  fields?: Field[]
+  alias?: Optional<string>
 }
 
 /**
@@ -32,4 +32,4 @@ export type SoqlQueryResult = {
   query: string;
   result: QueryResult<unknown>;
   columns: Field[];
-};
+}

@@ -18,7 +18,7 @@
  */
 export function info(message: string) {
   if (!__dirname.includes('/test/')) {
-    console.log(message);
+    console.log(message)
   }
 }
 
@@ -27,13 +27,13 @@ export function info(message: string) {
  * @param message Error message
  */
 export function error(message: string) {
-  console.error(message);
+  console.error(message)
 }
 
 export function start(message: string) {
-  process.stdout.write(`${message}... `);
+  process.stdout.write(`${message}... `)
 }
 
 export function done() {
-  console.log('done');
+  console.log('done')
 }

@@ -1,6 +1,6 @@
-import {flags, SfdxCommand} from '@salesforce/command';
-import {Messages} from '@salesforce/core';
-import {AnyJson} from '@salesforce/ts-types';
+import {flags, SfdxCommand} from '@salesforce/command'
+import {Messages} from '@salesforce/core'
+import {AnyJson} from '@salesforce/ts-types'
 
 /* tslint:disable */
 const parser = require('fast-xml-parser');
@@ -8,15 +8,15 @@ const fs = require('fs');
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
-Messages.importMessagesDirectory(__dirname);
+Messages.importMessagesDirectory(__dirname)
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'permgen');
+const messages = Messages.loadMessages('veloce-sfdx', 'permgen')
 
 export default class Org extends SfdxCommand {
 
-  public static description = messages.getMessage('commandDescription');
+  public static description = messages.getMessage('commandDescription')
 
   public static examples = [
     `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com -s Product2
@@ -26,36 +26,36 @@ export default class Org extends SfdxCommand {
     `$ sfdx veloce:permgen -f ./myname.csv --targetusername myOrg@example.com -s Product2
   Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   `
-  ];
+  ]
 
-  public static args = [{name: 'file'}];
+  public static args = [{name: 'file'}]
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription')}),
     sobjecttypes: flags.string({char: 's', description: messages.getMessage('sobjecttypesFlagDescription')}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription'), required: false})
-  };
+  }
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
+  protected static requiresUsername = true
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = true
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : [];
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.split(',') : []
 
-    const sobjecttypess = this.flags.sobjecttypes ? this.flags.sobjecttypes.split(',') : [];
+    const sobjecttypess = this.flags.sobjecttypes ? this.flags.sobjecttypes.split(',') : []
     if (!sobjecttypess.length) {
-      this.ux.log('At least one sobjecttype is required!');
-      process.exit(255);
+      this.ux.log('At least one sobjecttype is required!')
+      process.exit(255)
     }
-    const fieldPermissions = [];
-    const objectPermissions = [];
+    const fieldPermissions = []
+    const objectPermissions = []
     /*
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -88,9 +88,9 @@ export default class Org extends SfdxCommand {
     <hasActivationRequired>false</hasActivationRequired>
     <label>Veloce Client Objects Full</label>
 </PermissionSet>
-`;
-    let jsonObj = null;
-    const validationResult = parser.validate(initialXML);
+`
+    let jsonObj = null
+    const validationResult = parser.validate(initialXML)
     if (validationResult === true) { // optional (it'll return an object in case it's not valid)
       jsonObj = parser.parse(initialXML, {
         attributeNamePrefix: '@_',
@@ -106,39 +106,39 @@ export default class Org extends SfdxCommand {
         cdataPositionChar: '\\c',
         parseTrueNumberOnly: false,
         arrayMode: false // "strict"
-      });
+      })
     } else {
-      this.ux.warn(`XML Fails validation: ${JSON.stringify(validationResult, null, '  ')}`);
-      process.exit(-1);
+      this.ux.warn(`XML Fails validation: ${JSON.stringify(validationResult, null, '  ')}`)
+      process.exit(-1)
     }
 
     for (const sobjecttype of sobjecttypess) {
-      const conn = this.org.getConnection();
+      const conn = this.org.getConnection()
       const fieldsResult = await conn.autoFetchQuery(`
 SELECT EntityDefinition.QualifiedApiName,QualifiedApiName
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') ORDER BY QualifiedApiName
-    `, {autoFetch: true, maxFetch: 50000});
+    `, {autoFetch: true, maxFetch: 50000})
       for (const f of fieldsResult.records) {
-        const apiName = f['QualifiedApiName'];
+        const apiName = f['QualifiedApiName']
         if (!apiName.endsWith('__c') || ignorefields.includes(apiName)) { // only custom fields!
-          continue;
+          continue
         }
         const toolingResult = await conn.tooling.autoFetchQuery(`
 SELECT Metadata
 FROM FieldDefinition
-WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiName IN ('${apiName}') LIMIT 1`, {autoFetch: true, maxFetch: 50000});
-        const tf = toolingResult.records[0];
-        const required = tf['Metadata']['required'];
+WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiName IN ('${apiName}') LIMIT 1`, {autoFetch: true, maxFetch: 50000})
+        const tf = toolingResult.records[0]
+        const required = tf['Metadata']['required']
         if (required) {
-          continue;
+          continue
         }
-        this.ux.log(`Adding field: ${sobjecttype}.${apiName}`);
+        this.ux.log(`Adding field: ${sobjecttype}.${apiName}`)
         fieldPermissions.push({
           editable: true,
           readable: true,
           field: `${sobjecttype}.${apiName}`
-        });
+        })
       }
 
       objectPermissions.push({
@@ -149,18 +149,18 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiNa
         modifyAllRecords: (sobjecttype !== 'Product2' && sobjecttype !== 'Pricebook2'),
         object: sobjecttype,
         viewAllRecords: (sobjecttype !== 'Product2' && sobjecttype !== 'Pricebook2')
-      });
+      })
     }
 
     if (fieldPermissions.length === 1) {
-      jsonObj['PermissionSet']['fieldPermissions'] = fieldPermissions[0];
+      jsonObj['PermissionSet']['fieldPermissions'] = fieldPermissions[0]
     } else {
-      jsonObj['PermissionSet']['fieldPermissions'] = fieldPermissions;
+      jsonObj['PermissionSet']['fieldPermissions'] = fieldPermissions
     }
     if (objectPermissions.length === 1) {
-      jsonObj['PermissionSet']['objectPermissions'] = objectPermissions[0];
+      jsonObj['PermissionSet']['objectPermissions'] = objectPermissions[0]
     } else {
-      jsonObj['PermissionSet']['objectPermissions'] = objectPermissions;
+      jsonObj['PermissionSet']['objectPermissions'] = objectPermissions
     }
 
     const outOptions = {
@@ -173,12 +173,12 @@ WHERE EntityDefinition.QualifiedApiName IN ('${sobjecttype}') AND QualifiedApiNa
       format: true,
       indentBy: '  ',
       supressEmptyNode: false
-    };
-    const outParser = new parser.j2xParser(outOptions);
-    const xml = outParser.parse(jsonObj);
-    fs.writeFileSync(this.flags.file, xml, {encoding: 'utf8', flag: 'w+'});
+    }
+    const outParser = new parser.j2xParser(outOptions)
+    const xml = outParser.parse(jsonObj)
+    fs.writeFileSync(this.flags.file, xml, {encoding: 'utf8', flag: 'w+'})
 
     // Return an object to be displayed with --json
-    return jsonObj;
+    return jsonObj
   }
 }
