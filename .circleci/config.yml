@@ -1,7 +1,7 @@
 ---
 version: 2
 jobs:
-  node-latest: &test
+  node-14: &test
     docker:
       - image: node:latest
     working_directory: ~/cli
@@ -21,10 +21,24 @@ jobs:
           name: Testing
           command: yarn test
       - run:
-          name: snyk security check
+          name: Submitting code coverage to codecov
           command: |
             ./node_modules/.bin/nyc report --reporter text-lcov > coverage.lcov
             curl -s https://codecov.io/bash | bash
+  cache:
+    <<: *test
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yarn
+      - save_cache:
+          key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+          paths:
+            - ~/cli/node_modules
+            - /usr/local/share/.cache/yarn
+            - /usr/local/share/.config/yarn
+
 workflows:
   version: 2
   "veloce-sfdx":
