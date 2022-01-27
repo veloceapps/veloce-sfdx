@@ -1,7 +1,7 @@
 ---
 version: 2
 jobs:
-  node-latest: &test
+  node-14: &test
     docker:
       - image: node:latest
     working_directory: ~/cli
@@ -25,14 +25,6 @@ jobs:
           command: |
             ./node_modules/.bin/nyc report --reporter text-lcov > coverage.lcov
             curl -s https://codecov.io/bash | bash
-  node-10:
-    <<: *test
-    docker:
-      - image: node:10
-  node-14:
-    <<: *test
-    docker:
-      - image: node:14
   cache:
     <<: *test
     steps:
@@ -51,9 +43,7 @@ workflows:
   version: 2
   "veloce-sfdx":
     jobs:
-      - node-latest
       - node-14
-      - node-10
       - cache:
           filters:
             tags:

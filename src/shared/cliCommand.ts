@@ -11,16 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-import * as childProc from 'child_process';
-import * as path from 'path';
-import { isNullOrUndefined } from 'util';
-import { info } from './logger';
+import * as childProc from 'child_process'
+import * as path from 'path'
+import { isNullOrUndefined } from 'util'
+import { info } from './logger'
 
 export interface CLICommand {
-  commandString: string;
-  encloseInQuotes?: boolean;
-  args?: string[];
-  errors?: string[];
+  commandString: string
+  encloseInQuotes?: boolean
+  args?: string[]
+  errors?: string[]
 }
 
 /**
@@ -32,10 +32,10 @@ export function runAll(commands: CLICommand[], runner?) {
 
   if (commands.length > 0) {
     commands.forEach(cmd => {
-      run(cmd, runner);
-    });
+      run(cmd, runner)
+    })
   } else {
-    info('No commands to run.');
+    info('No commands to run.')
   }
 }
 
@@ -45,21 +45,21 @@ export function runAll(commands: CLICommand[], runner?) {
  * @param runner Optional alternate function to run command
  */
 export function run(cmd: CLICommand, runner?) {
-  let commandStr = cmd.commandString;
+  let commandStr = cmd.commandString
 
-  commandStr = path.normalize(commandStr.replace('$REPO', process.env.REPO).replace('~', process.env.HOME));
+  commandStr = path.normalize(commandStr.replace('$REPO', process.env.REPO).replace('~', process.env.HOME))
 
   if (cmd.encloseInQuotes) {
-    commandStr = `"${commandStr}"`;
+    commandStr = `"${commandStr}"`
   }
   if (!isNullOrUndefined(cmd.args) && cmd.args.length > 0) {
-    commandStr += ` ${cmd.args.join(' ')}`;
+    commandStr += ` ${cmd.args.join(' ')}`
   }
 
   if (runner) {
-    runner(commandStr);
+    runner(commandStr)
   } else {
-    runCmd(commandStr);
+    runCmd(commandStr)
   }
 }
 
@@ -70,15 +70,15 @@ export function run(cmd: CLICommand, runner?) {
  */
 export function runCmd(command: string, noInherit?: boolean) {
   if (process.env.SYSTEM_DEBUG === 'true') {
-    info(`Running CLI command: ${command}`);
+    info(`Running CLI command: ${command}`)
   }
-  let retVal;
+  let retVal
   if (!command.startsWith('testcommand')) {
     if (noInherit) {
-      retVal = childProc.execSync(command, {encoding: 'utf8'});
+      retVal = childProc.execSync(command, {encoding: 'utf8'})
     } else {
-      retVal = childProc.execSync(command, {encoding: 'utf8', stdio: 'inherit'});
+      retVal = childProc.execSync(command, {encoding: 'utf8', stdio: 'inherit'})
     }
   }
-  return retVal;
+  return retVal
 }

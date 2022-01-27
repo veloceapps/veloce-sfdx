@@ -1,20 +1,20 @@
-import {flags, SfdxCommand} from '@salesforce/command';
-import {Messages} from '@salesforce/core';
-import {AnyJson} from '@salesforce/ts-types';
+import {flags, SfdxCommand} from '@salesforce/command'
+import {Messages} from '@salesforce/core'
+import {AnyJson} from '@salesforce/ts-types'
 /* tslint:disable */
 const fs = require('fs');
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
-Messages.importMessagesDirectory(__dirname);
+Messages.importMessagesDirectory(__dirname)
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'loadcontentdoc');
+const messages = Messages.loadMessages('veloce-sfdx', 'loadcontentdoc')
 
 export default class Org extends SfdxCommand {
 
-  public static description = messages.getMessage('commandDescription');
+  public static description = messages.getMessage('commandDescription')
 
   public static examples = [
     `$ sfdx veloce:loadcontentdoc -i 01521000000gHgnAAE --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
@@ -23,9 +23,9 @@ export default class Org extends SfdxCommand {
     `$ sfdx veloce:loadcontentdoc -i 01521000000gHgnAAE --name myname --targetusername myOrg@example.com
   Document content here
   `
-  ];
+  ]
 
-  public static args = [{name: 'file'}];
+  public static args = [{name: 'file'}]
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
@@ -50,54 +50,54 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('inputfileFlagDescription'),
       required: true
     })
-  };
+  }
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
+  protected static requiresUsername = true
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = true
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    let idmap;
+    let idmap
     try {
-      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
     } catch (err) {
-      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
-      idmap = {};
+      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`)
+      idmap = {}
     }
-    const id = idmap[this.flags.id] ? idmap[this.flags.id] : this.flags.id;
+    const id = idmap[this.flags.id] ? idmap[this.flags.id] : this.flags.id
 
-    const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'});
-    const b64Data = fdata.toString('base64');
+    const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'})
+    const b64Data = fdata.toString('base64')
 
-    const conn = this.org.getConnection();
+    const conn = this.org.getConnection()
 
     // The type we are querying for
     interface ContentVersion {
-      VersionData: string;
-      ContentDocumentId: string|undefined;
-      Title: string;
-      PathOnClient: string;
-      Description: string;
-      SharingOption: string;
-      SharingPrivacy: string;
+      VersionData: string
+      ContentDocumentId: string|undefined
+      Title: string
+      PathOnClient: string
+      Description: string
+      SharingOption: string
+      SharingPrivacy: string
     }
     interface ContentDocument {
-      Id: string;
+      Id: string
     }
 
     interface RestResult {
-      id: string;
-      success: boolean;
-      errors: string[];
+      id: string
+      success: boolean
+      errors: string[]
     }
 
     // Query the org
-    const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`);
+    const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`)
 
     if (!result.records || result.records.length <= 0) {
       // Document not found, insert new one.
@@ -109,7 +109,7 @@ export default class Org extends SfdxCommand {
         Description: this.flags.description,
         SharingOption: 'A',
         SharingPrivacy: 'N'
-      };
+      }
       /* tslint:disable */
       const rr = await conn.request({
         url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,

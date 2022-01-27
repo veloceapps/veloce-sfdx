@@ -1,26 +1,26 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import {Connection, Logger, Messages, SfdxError} from '@salesforce/core';
-import {Tooling} from '@salesforce/core/lib/connection';
-import { AnyJson } from '@salesforce/ts-types';
-import { QueryResult} from 'jsforce';
-import 'ts-replace-all';
+import { flags, SfdxCommand } from '@salesforce/command'
+import {Connection, Logger, Messages, SfdxError} from '@salesforce/core'
+import {Tooling} from '@salesforce/core/lib/connection'
+import { AnyJson } from '@salesforce/ts-types'
+import { QueryResult} from 'jsforce'
+import 'ts-replace-all'
 
 /* tslint:disable */
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
 /* tslint:enable */
-let currentBatch = 0;
+let currentBatch = 0
 
 // Initialize Messages with the current plugin directory
-Messages.importMessagesDirectory(__dirname);
+Messages.importMessagesDirectory(__dirname)
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('veloce-sfdx', 'load');
+const messages = Messages.loadMessages('veloce-sfdx', 'load')
 
 export default class Org extends SfdxCommand {
 
-  public static description = messages.getMessage('commandDescription');
+  public static description = messages.getMessage('commandDescription')
 
   public static examples = [
   `$ sfdx veloce:load -f ./ myname.csv --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
@@ -30,9 +30,9 @@ export default class Org extends SfdxCommand {
   `$ sfdx veloce:load -f ./ myname.csv --targetusername myOrg@example.com
   Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
   `
-  ];
+  ]
 
-  public static args = [{name: 'file'}];
+  public static args = [{name: 'file'}]
 
   protected static flagsConfig = {
     sobjecttype: flags.string({
@@ -53,184 +53,184 @@ export default class Org extends SfdxCommand {
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
     batch: flags.string({char: 'b', description: messages.getMessage('batchFlagDescription')})
-  };
+  }
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
+  protected static requiresUsername = true
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = true
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  protected static requiresProject = false
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger): Promise<QueryResult<unknown>> {
-    logger.debug('running query');
+    logger.debug('running query')
 
-    const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000});
-    logger.debug(`Query complete with ${result.totalSize} records returned`);
+    const result = await connection.autoFetchQuery(query, {autoFetch: true, maxFetch: 50000})
+    logger.debug(`Query complete with ${result.totalSize} records returned`)
     if (result.totalSize) {
-      logger.debug('fetching columns for query');
+      logger.debug('fetching columns for query')
     }
     // remove nextRecordsUrl and force done to true
-    delete result.nextRecordsUrl;
-    result.done = true;
-    return result;
+    delete result.nextRecordsUrl
+    result.done = true
+    return result
   }
 
   public async run(): Promise<AnyJson> {
-    let ok = true;
-    const output = '';
-    const batchSize = parseInt(this.flags.batch || 10, 10);
-    const sType = this.flags.sobjecttype.toLowerCase();
-    const extId = this.flags.externalid.toLowerCase();
-    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : [];
-    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : [];
-    const upsert = this.flags.upsert || false;
+    let ok = true
+    const output = ''
+    const batchSize = parseInt(this.flags.batch || 10, 10)
+    const sType = this.flags.sobjecttype.toLowerCase()
+    const extId = this.flags.externalid.toLowerCase()
+    const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : []
+    const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : []
+    const upsert = this.flags.upsert || false
 
     if (upsert === false) {
-      throw new SfdxError('non-upsert mode is currently NOT SUPPORTED', 'ApexError');
+      throw new SfdxError('non-upsert mode is currently NOT SUPPORTED', 'ApexError')
     }
 
     if (!ignorefields.includes('id')) {
-      ignorefields.push('id');
+      ignorefields.push('id')
     }
     if (!ignorefields.includes(extId) && !upsert) {
-      ignorefields.push(extId);
+      ignorefields.push(extId)
     }
 
-    const fileContent = fs.readFileSync(this.flags.file);
-    let idmap;
+    const fileContent = fs.readFileSync(this.flags.file)
+    let idmap
     try {
-      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString());
+      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
     } catch (err) {
-      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`);
-      idmap = {};
+      this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`)
+      idmap = {}
     }
     // retrieve types of args
-    const conn = this.org.getConnection();
+    const conn = this.org.getConnection()
     const fieldsResult = await conn.autoFetchQuery(`
 SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
-    `, {autoFetch: true, maxFetch: 50000});
+    `, {autoFetch: true, maxFetch: 50000})
 
     for (const f of fieldsResult.records) {
-      const apiName = f['QualifiedApiName'];
-      const datatype = f['DataType'];
+      const apiName = f['QualifiedApiName']
+      const datatype = f['DataType']
       if (datatype.includes('Formula')) {
-        ignorefields.push(apiName.toLowerCase());
+        ignorefields.push(apiName.toLowerCase())
       }
     }
 
-    const records = parse(fileContent, {columns: true, bom: true});
+    const records = parse(fileContent, {columns: true, bom: true})
     while (true) {
-      const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1));
-      console.log(`batch#${currentBatch} size: ${batch.length}`);
+      const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1))
+      console.log(`batch#${currentBatch} size: ${batch.length}`)
       if (batch.length === 0) {
-        break;
+        break
       }
-      const ids = [];
-      const extId2OldId = {};
+      const ids = []
+      const extId2OldId = {}
       batch.forEach(rWithCase => {
         // convert keys to lowercase
-        const keys = Object.keys(rWithCase);
-        let n = keys.length;
+        const keys = Object.keys(rWithCase)
+        let n = keys.length
 
         /* tslint:disable-next-line */
         const r: any = {};
         while (n--) {
-          const key = keys[n];
+          const key = keys[n]
           if (key) {
-            r[key.toLowerCase()] = rWithCase[key];
+            r[key.toLowerCase()] = rWithCase[key]
           }
         }
 
         // Populate external ID from ID
         if (!r[extId]) {
-          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`);
-          r[extId] = r.id;
+          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`)
+          r[extId] = r.id
           // remove external ID from ignore fields
           if (ignorefields.includes(extId)) {
-            const index = ignorefields.indexOf(extId);
+            const index = ignorefields.indexOf(extId)
             if (index > -1) {
-              ignorefields.splice(index, 1);
+              ignorefields.splice(index, 1)
             }
           }
         }
-        ids.push(r[extId]);
-        extId2OldId[r[extId]] = r.id;
-      });
+        ids.push(r[extId])
+        extId2OldId[r[extId]] = r.id
+      })
 
-      const objects = [];
+      const objects = []
       for (const rWithCase of batch) {
         // convert keys to lowercase
-        const keys = Object.keys(rWithCase);
-        let n = keys.length;
+        const keys = Object.keys(rWithCase)
+        let n = keys.length
 
         /* tslint:disable-next-line */
         const r: any = {};
         while (n--) {
-          const key = keys[n];
+          const key = keys[n]
           if (key) {
-            r[key.toLowerCase()] = rWithCase[key];
+            r[key.toLowerCase()] = rWithCase[key]
           }
         }
 
-        const obj: Record<string, string> = {};
+        const obj: Record<string, string> = {}
         for (const [k, value] of Object.entries(r)) {
-          let s = '' + value;
+          let s = '' + value
           if (ignorefields.includes(k)) {
-            continue;
+            continue
           }
           if (idReplaceFields.includes(k)) {
             for (const [key, v] of Object.entries(idmap)) {
-              const olds = s;
-              s = olds.replaceAll(key, v as string);
+              const olds = s
+              s = olds.replaceAll(key, v as string)
               if (olds !== s) {
-                this.ux.log(`CONTENT: ${key} => ${v}`);
+                this.ux.log(`CONTENT: ${key} => ${v}`)
               }
             }
           }
-          const m = idmap[s];
+          const m = idmap[s]
           if (k !== extId && m) { // dont map ExternalID column!
-            s = m;
+            s = m
           }
-          obj[k] = s;
+          obj[k] = s
         }
-        objects.push(obj);
+        objects.push(obj)
       }
 
       const job = conn.bulk.createJob(this.flags.sobjecttype, 'upsert', {
         extIdField: this.flags.externalid as string,
         concurrencyMode: 'Serial'
-      });
+      })
       job.on('error', (err): void => {
-        ok = false;
-        this.ux.log(`Error: ${err}`);
-      });
-      const newBatch = job.createBatch();
-      newBatch.execute(objects);
+        ok = false
+        this.ux.log(`Error: ${err}`)
+      })
+      const newBatch = job.createBatch()
+      newBatch.execute(objects)
       await new Promise((resolve, reject) => {
         newBatch.on('queue', batchInfo => {
-          const batchId = batchInfo.id;
-          const b = job.batch(batchId);
+          const batchId = batchInfo.id
+          const b = job.batch(batchId)
           b.on('response', res => {
-            resolve(res);
-          });
+            resolve(res)
+          })
           b.on('error', err => {
-            ok = false;
-            this.ux.log(`Error: ${err}`);
-            reject(err);
-          });
-          b.poll(5 * 1000, 300 * 1000);
-        });
-      });
+            ok = false
+            this.ux.log(`Error: ${err}`)
+            reject(err)
+          })
+          b.poll(5 * 1000, 300 * 1000)
+        })
+      })
       // Query back Ids
-      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`;
-      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger);
+      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`
+      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger)
       if (!queryResult.done) {
-        throw new SfdxError(`Query not done: ${query}`, 'ApexError');
+        throw new SfdxError(`Query not done: ${query}`, 'ApexError')
       }
       /* tslint:disable */
       queryResult.records.forEach((rWithCase: any) => {
@@ -257,15 +257,15 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         }
       });
       /* tslint:enable */
-      currentBatch++;
+      currentBatch++
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'})
     if (!ok) {
-      throw new SfdxError(output, 'ApexError');
+      throw new SfdxError(output, 'ApexError')
     }
-    this.ux.log('Data successfully loaded');
+    this.ux.log('Data successfully loaded')
     // Return an object to be displayed with --json
-    return {orgId: this.org.getOrgId()};
+    return {orgId: this.org.getOrgId()}
   }
 }
