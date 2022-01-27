@@ -5,7 +5,6 @@ USAGE
   $ sfdx veloce:COMMAND
 
 COMMANDS
-
   veloce:apexload        Loads data into org, by creation of Anonymous apex code
                          and it's execution. Operation is working in two modes:
                          Update only (default) and Upsert --upsert. After each
