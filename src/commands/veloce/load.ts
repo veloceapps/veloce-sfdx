@@ -241,8 +241,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       for (const vid of idsToValidate) {
         script += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`
       }
-      let output = ''
       if (script.length > 0) {
+        let validationOutput = ''
         const exec = new apexNode.ExecuteService(conn)
         const execAnonOptions = Object.assign({}, {apexCode: script})
         const result = await exec.executeAnonymous(execAnonOptions)
@@ -251,12 +251,12 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           ok = false
           const out = this.formatDefault(result)
           this.ux.log(out)
-          output += `${out}\n`
+          validationOutput += `${out}\n`
           this.ux.log('Executed Script START')
           this.ux.log(script)
           this.ux.log('Executed Script END')
-          output += `${out}\n`
-          throw new SfdxError(output, 'ApexError')
+          validationOutput += `${out}\n`
+          throw new SfdxError(validationOutput, 'ApexError')
         }
       }
 
