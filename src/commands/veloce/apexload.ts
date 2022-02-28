@@ -268,6 +268,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
                 .replaceAll('\r', '\\r')}'`)
           }
         }
+
         if (upsert) {
           for (const vid of idsToValidate) {
             objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`

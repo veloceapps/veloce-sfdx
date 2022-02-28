@@ -6,10 +6,42 @@ import { QueryResult} from 'jsforce'
 import 'ts-replace-all'
 
 /* tslint:disable */
+const apexNode = require('@salesforce/apex-node');
 const parse = require('csv-parse/lib/sync');
 const fs = require('fs');
 /* tslint:enable */
 let currentBatch = 0
+const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$')
+
+const validSFID = (input: string): boolean => {
+  // https://stackoverflow.com/a/29299786/1333724
+  if (!salesforceIdRegex.test(input)) {
+    return false
+  }
+  const parts = [input.substr(0, 5),
+    input.substr(5, 5),
+    input.substr(10, 5)]
+  const chars: number[] = [0, 0, 0]
+  for (let j = 0; j < parts.length; j++) {
+    const word = parts[j]
+    for (let i = 0; i < word.length; i++) {
+      const char = word.charCodeAt(i)
+      if (char >= 65 && char <= 90) {
+        chars[j] += 1 << i
+      }
+    }
+  }
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i]
+    if (c <= 25) {
+      chars[i] = c + 65
+    } else {
+      chars[i] = c - 25 + 48
+    }
+  }
+
+  return (String.fromCharCode(chars[0], chars[1], chars[2])) === input.substr(15, 3)
+}
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -162,6 +194,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         extId2OldId[r[extId]] = r.id
       })
 
+      const idsToValidate = []
       const objects = []
       for (const rWithCase of batch) {
         // convert keys to lowercase
@@ -197,8 +230,34 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
             s = m
           }
           obj[k] = s
+          if (k !== extId && validSFID(s)) {
+            idsToValidate.push(s)
+          }
         }
         objects.push(obj)
+      }
+
+      let script = ''
+      for (const vid of idsToValidate) {
+        script += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`
+      }
+      let output = ''
+      if (script.length > 0) {
+        const exec = new apexNode.ExecuteService(conn)
+        const execAnonOptions = Object.assign({}, {apexCode: script})
+        const result = await exec.executeAnonymous(execAnonOptions)
+
+        if (!result.success) {
+          ok = false
+          const out = this.formatDefault(result)
+          this.ux.log(out)
+          output += `${out}\n`
+          this.ux.log('Executed Script START')
+          this.ux.log(script)
+          this.ux.log('Executed Script END')
+          output += `${out}\n`
+          throw new SfdxError(output, 'ApexError')
+        }
       }
 
       const job = conn.bulk.createJob(this.flags.sobjecttype, 'upsert', {
@@ -267,5 +326,25 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
     this.ux.log('Data successfully loaded')
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()}
+  }
+
+  private formatDefault(response) {
+    let outputText = ''
+    if (response.success) {
+      outputText += 'SUCCESS\n'
+      outputText += `\n${response.logs}`
+    } else {
+      const diagnostic = response.diagnostic[0]
+      if (!response.compiled) {
+        outputText += `Error: Line: ${diagnostic.lineNumber}, Column: ${diagnostic.columnNumber}\n`
+        outputText += `Error: ${diagnostic.compileProblem}\n`
+      } else {
+        outputText += 'COMPILE SUCCESS\n'
+        outputText += `Error: ${diagnostic.exceptionMessage}\n`
+        outputText += `Error: ${diagnostic.exceptionStackTrace}\n`
+        outputText += `\n${response.logs}`
+      }
+    }
+    return outputText
   }
 }
