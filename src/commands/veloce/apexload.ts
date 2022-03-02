@@ -328,6 +328,10 @@ ${objects}
         const obj = extId2Values[r[extId]]
         const oldObj = extId2OldValues[r[extId]]
         for (const k of Object.keys(obj)) {
+          if (!oldObj) {
+            this.ux.log(`  NEW: ${obj[k]}`)
+            continue
+          }
           if (!k) {
             continue
           }
