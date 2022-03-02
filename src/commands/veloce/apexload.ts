@@ -20,20 +20,20 @@ Messages.importMessagesDirectory(__dirname)
 const messages = Messages.loadMessages('veloce-sfdx', 'apexload')
 const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$')
 
-const keysToLowerCase = (rWithCase: any): any => {
+const keysToLowerCase = (rWithCase: object): object => {
   // convert keys to lowercase
-  const keys = Object.keys(rWithCase);
-  let n = keys.length;
+  const keys = Object.keys(rWithCase)
+  let n = keys.length
 
   /* tslint:disable-next-line */
   const r: any = {};
   while (n--) {
-    const key = keys[n];
+    const key = keys[n]
     if (key) {
-      r[key.toLowerCase()] = rWithCase[key];
+      r[key.toLowerCase()] = rWithCase[key]
     }
   }
-  return r;
+  return r
 }
 
 const validSFID = (input: string): boolean => {
@@ -197,8 +197,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         break
       }
       const ids = []
-      const extId2Values : { [key:string]:any; } = {}
-      var extId2OldValues : { [key:string]:any; } = {};
+      const extId2Values: { [key: string]: object; } = {}
+      const extId2OldValues: { [key: string]: object; } = {}
 
       batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
@@ -279,7 +279,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         }
       }
 
-        if (upsert) {
+      if (upsert) {
         script = `
 ${sType} [] o = new List<${sType}>();
 ${objects}
@@ -356,7 +356,7 @@ ${objects}
     return {orgId: this.org.getOrgId()}
   }
 
-  public async getOldRecord(conn: Connection, keys: any[], sType: string, extIdField: string, extId: string) {
+  public async getOldRecord(conn: Connection, keys: string[], sType: string, extIdField: string, extId: string) {
     // Query back Ids
     const query = `SELECT ${keys.join(',')} FROM ${sType} WHERE ${extIdField} = '${extId}'`
 

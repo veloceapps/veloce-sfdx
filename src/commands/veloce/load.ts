@@ -13,20 +13,20 @@ const fs = require('fs');
 let currentBatch = 0
 const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$')
 
-const keysToLowerCase = (rWithCase: any): any => {
+const keysToLowerCase = (rWithCase: object): object => {
   // convert keys to lowercase
-  const keys = Object.keys(rWithCase);
-  let n = keys.length;
+  const keys = Object.keys(rWithCase)
+  let n = keys.length
 
   /* tslint:disable-next-line */
   const r: any = {};
   while (n--) {
-    const key = keys[n];
+    const key = keys[n]
     if (key) {
-      r[key.toLowerCase()] = rWithCase[key];
+      r[key.toLowerCase()] = rWithCase[key]
     }
   }
-  return r;
+  return r
 }
 
 const validSFID = (input: string): boolean => {
