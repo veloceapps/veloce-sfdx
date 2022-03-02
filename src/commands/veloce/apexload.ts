@@ -208,10 +208,10 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       let script = ''
       let objects = ''
       const idsToValidate = []
-      let keys = []
+      //let keys = []
       for (const rWithCase of batch) {
         const r = keysToLowerCase(rWithCase)
-        keys = Object.keys(r)
+        //keys = Object.keys(r)
 
         const fields = []
         for (const [k, value] of Object.entries(r)) {
@@ -259,7 +259,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
 
-        extId2OldValues[r[extId]] = await this.getOldRecord(conn, keys, sType, extId, r[extId])
+        //extId2OldValues[r[extId]] = await this.getOldRecord(conn, keys, sType, extId, r[extId])
 
         if (upsert) {
           for (const vid of idsToValidate) {
@@ -325,23 +325,23 @@ ${objects}
         } else {
           this.ux.log(`MISSING => ${r['id']}`);
         }
-        const obj = extId2Values[r[extId]]
-        const oldObj = extId2OldValues[r[extId]]
-        for (const k of Object.keys(obj)) {
-          if (!oldObj) {
-            this.ux.log(`  NEW: ${obj[k]}`)
-            continue
-          }
-          if (!k) {
-            continue
-          }
-          if (k === 'id') {
-            continue
-          }
-          if (oldObj[k] !== obj[k] && (!(oldObj[k] === null && obj[k] === ''))) {
-            this.ux.log(`  CHANGE: ${oldObj[k]} => ${obj[k]}`)
-          }
-        }
+        //const obj = extId2Values[r[extId]]
+        //const oldObj = extId2OldValues[r[extId]]
+        //for (const k of Object.keys(obj)) {
+        //  if (!oldObj) {
+        //    this.ux.log(`  NEW: ${obj[k]}`)
+        //    continue
+        //  }
+        //  if (!k) {
+        //    continue
+        //  }
+        //  if (k === 'id') {
+        //    continue
+        //  }
+        //  if (oldObj[k] !== obj[k] && (!(oldObj[k] === null && obj[k] === ''))) {
+        //    this.ux.log(`  CHANGE: ${oldObj[k]} => ${obj[k]}`)
+        //  }
+        //}
       });
       /* tslint:enable */
       currentBatch++
