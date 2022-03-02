@@ -13,6 +13,22 @@ const fs = require('fs');
 let currentBatch = 0
 const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$')
 
+const keysToLowerCase = (rWithCase: any): any => {
+  // convert keys to lowercase
+  const keys = Object.keys(rWithCase);
+  let n = keys.length;
+
+  /* tslint:disable-next-line */
+  const r: any = {};
+  while (n--) {
+    const key = keys[n];
+    if (key) {
+      r[key.toLowerCase()] = rWithCase[key];
+    }
+  }
+  return r;
+}
+
 const validSFID = (input: string): boolean => {
   // https://stackoverflow.com/a/29299786/1333724
   if (!salesforceIdRegex.test(input)) {
@@ -49,7 +65,6 @@ Messages.importMessagesDirectory(__dirname)
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'load')
-
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription')
@@ -165,18 +180,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       const ids = []
       const extId2OldId = {}
       batch.forEach(rWithCase => {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase)
-        let n = keys.length
-
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n]
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key]
-          }
-        }
+        const r = keysToLowerCase(rWithCase)
 
         // Populate external ID from ID
         if (!r[extId]) {
@@ -197,18 +201,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       const idsToValidate = []
       const objects = []
       for (const rWithCase of batch) {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase)
-        let n = keys.length
-
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n]
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key]
-          }
-        }
+        const r = keysToLowerCase(rWithCase)
 
         const obj: Record<string, string> = {}
         for (const [k, value] of Object.entries(r)) {
@@ -293,18 +286,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       }
       /* tslint:disable */
       queryResult.records.forEach((rWithCase: any) => {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase);
-        let n = keys.length;
-
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n];
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key];
-          }
-        }
+        const r = keysToLowerCase(rWithCase)
 
         if (extId2OldId[r[extId]] && r.id) {
           if (extId2OldId[r[extId]] != r.id) {

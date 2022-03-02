@@ -20,6 +20,22 @@ Messages.importMessagesDirectory(__dirname)
 const messages = Messages.loadMessages('veloce-sfdx', 'apexload')
 const salesforceIdRegex = new RegExp('^[a-zA-Z0-9]{18}$')
 
+const keysToLowerCase = (rWithCase: any): any => {
+  // convert keys to lowercase
+  const keys = Object.keys(rWithCase);
+  let n = keys.length;
+
+  /* tslint:disable-next-line */
+  const r: any = {};
+  while (n--) {
+    const key = keys[n];
+    if (key) {
+      r[key.toLowerCase()] = rWithCase[key];
+    }
+  }
+  return r;
+}
+
 const validSFID = (input: string): boolean => {
   // https://stackoverflow.com/a/29299786/1333724
   if (!salesforceIdRegex.test(input)) {
@@ -83,6 +99,7 @@ export default class Org extends SfdxCommand {
 
     printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
+    dry: flags.boolean({char: 'd', description: messages.getMessage('dryFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
@@ -155,18 +172,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
     const seenExtIds = []
 
     records.forEach(rWithCase => {
-      // convert keys to lowercase
-      const keys = Object.keys(rWithCase)
-      let n = keys.length
+      const r = keysToLowerCase(rWithCase)
 
-      /* tslint:disable-next-line */
-      const r: any = {};
-      while (n--) {
-        const key = keys[n]
-        if (key) {
-          r[key.toLowerCase()] = rWithCase[key]
-        }
-      }
       if (r[extId] && seenExtIds.includes(r[extId])) {
         this.ux.log(`${r.id}: Duplicated Value ${r[extId]} for key ${extId}, External IDs MUST be unique across the file`)
         hasFailedExtIds = true
@@ -190,42 +197,25 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         break
       }
       const ids = []
-      const extId2OldId = {}
-      batch.forEach(rWithCase => {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase)
-        let n = keys.length
+      const extId2Values : { [key:string]:any; } = {}
+      var extId2OldValues : { [key:string]:any; } = {};
 
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n]
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key]
-          }
-        }
+      batch.forEach(rWithCase => {
+        const r = keysToLowerCase(rWithCase)
         ids.push(r[extId])
-        extId2OldId[r[extId]] = r.id
+        extId2Values[r[extId]] = r
       })
       let script = ''
       let objects = ''
       const idsToValidate = []
+      let keys = []
       for (const rWithCase of batch) {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase)
-        let n = keys.length
-
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n]
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key]
-          }
-        }
+        const r = keysToLowerCase(rWithCase)
+        keys = Object.keys(r)
 
         const fields = []
         for (const [k, value] of Object.entries(r)) {
+
           let s = '' + value
           if (ignorefields.includes(k)) {
             continue
@@ -269,6 +259,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
 
+        extId2OldValues[r[extId]] = await this.getOldRecord(conn, keys, sType, extId, r[extId])
+
         if (upsert) {
           for (const vid of idsToValidate) {
             objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`
@@ -287,7 +279,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         }
       }
 
-      if (upsert) {
+        if (upsert) {
         script = `
 ${sType} [] o = new List<${sType}>();
 ${objects}
@@ -323,26 +315,28 @@ ${objects}
       }
       /* tslint:disable */
       queryResult.records.forEach((rWithCase: any) => {
-        // convert keys to lowercase
-        const keys = Object.keys(rWithCase);
-        let n = keys.length;
+        const r = keysToLowerCase(rWithCase)
 
-        /* tslint:disable-next-line */
-        const r: any = {};
-        while (n--) {
-          const key = keys[n];
-          if (key) {
-            r[key.toLowerCase()] = rWithCase[key];
-          }
-        }
-
-        if (extId2OldId[r[extId]] && r.id) {
-          if (extId2OldId[r[extId]] != r.id) {
-            this.ux.log(`${extId2OldId[r[extId]]} => ${r.id}`);
-            idmap[extId2OldId[r[extId]]] = r.id;
+        if (extId2Values[r[extId]]?.id && r.id) {
+          if (extId2Values[r[extId]]?.id != r.id) {
+            this.ux.log(`${extId2Values[r[extId]]?.id} => ${r.id}`);
+            idmap[extId2Values[r[extId]]?.id] = r.id;
           }
         } else {
           this.ux.log(`MISSING => ${r.id}`);
+        }
+        const obj = extId2Values[r[extId]]
+        const oldObj = extId2OldValues[r[extId]]
+        for (const k of Object.keys(obj)) {
+          if (!k) {
+            continue
+          }
+          if (k === 'id') {
+            continue
+          }
+          if (oldObj[k] !== obj[k] && (!(oldObj[k] === null && obj[k] === ''))) {
+            this.ux.log(`  CHANGE: ${oldObj[k]} => ${obj[k]}`)
+          }
         }
       });
       /* tslint:enable */
@@ -356,6 +350,23 @@ ${objects}
     this.ux.log('Data successfully loaded')
     // Return an object to be displayed with --json
     return {orgId: this.org.getOrgId()}
+  }
+
+  public async getOldRecord(conn: Connection, keys: any[], sType: string, extIdField: string, extId: string) {
+    // Query back Ids
+    const query = `SELECT ${keys.join(',')} FROM ${sType} WHERE ${extIdField} = '${extId}'`
+
+    const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger)
+
+    if (!queryResult.done) {
+      throw new SfdxError(`Query not done: ${query}`, 'ApexError')
+    }
+    /* tslint:disable */
+    let r: any
+    queryResult.records.forEach((rWithCase: any) => {
+      r = keysToLowerCase(rWithCase)
+    });
+    return r
   }
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
