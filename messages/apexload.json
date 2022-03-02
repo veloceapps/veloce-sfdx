@@ -3,7 +3,7 @@
   "sobjecttypeFlagDescription": "The sObject type of the records you want to upsert.",
   "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",
   "upsertFlagDescription": "Should use APEX upsert (could insert extra records) or update-only APEX (one by one), which is default",
-  "diffFlagDescription": "Diff mode, shows <previous> => <new> for each field, not only IDs",
+  "dryFlagDescription": "Dont change data, just run in dry mode",
   "externalidFlagDescription": "The column name of the external ID.",
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
