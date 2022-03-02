@@ -175,12 +175,12 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       const r = keysToLowerCase(rWithCase)
 
       if (r[extId] && seenExtIds.includes(r[extId])) {
-        this.ux.log(`${r.id}: Duplicated Value ${r[extId]} for key ${extId}, External IDs MUST be unique across the file`)
+        this.ux.log(`${r['id']}: Duplicated Value ${r[extId]} for key ${extId}, External IDs MUST be unique across the file`)
         hasFailedExtIds = true
       }
       // Fail if id's are empty
       if (!r[extId]) {
-        this.ux.log(`${r.id}: ${extId} is empty please populate with some truly unique ID and proceed`)
+        this.ux.log(`${r['id']}: ${extId} is empty please populate with some truly unique ID and proceed`)
         hasFailedExtIds = true
       } else {
         seenExtIds.push(r[extId])
@@ -317,13 +317,13 @@ ${objects}
       queryResult.records.forEach((rWithCase: any) => {
         const r = keysToLowerCase(rWithCase)
 
-        if (extId2Values[r[extId]]?.id && r.id) {
-          if (extId2Values[r[extId]]?.id != r.id) {
-            this.ux.log(`${extId2Values[r[extId]]?.id} => ${r.id}`);
-            idmap[extId2Values[r[extId]]?.id] = r.id;
+        if (extId2Values[r[extId]]['id'] && r['id']) {
+          if (extId2Values[r[extId]]['id'] != r['id']) {
+            this.ux.log(`${extId2Values[r[extId]]['id']} => ${r['id']}`);
+            idmap[extId2Values[r[extId]]['id']] = r['id'];
           }
         } else {
-          this.ux.log(`MISSING => ${r.id}`);
+          this.ux.log(`MISSING => ${r['id']}`);
         }
         const obj = extId2Values[r[extId]]
         const oldObj = extId2OldValues[r[extId]]

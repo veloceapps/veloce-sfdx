@@ -184,8 +184,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
 
         // Populate external ID from ID
         if (!r[extId]) {
-          this.ux.log(`${r.id}: Auto-populating ${extId} with ${r.id}`)
-          r[extId] = r.id
+          this.ux.log(`${r['id']}: Auto-populating ${extId} with ${r['id']}`)
+          r[extId] = r['id']
           // remove external ID from ignore fields
           if (ignorefields.includes(extId)) {
             const index = ignorefields.indexOf(extId)
@@ -195,7 +195,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
         }
         ids.push(r[extId])
-        extId2OldId[r[extId]] = r.id
+        extId2OldId[r[extId]] = r['id']
       })
 
       const idsToValidate = []
@@ -288,13 +288,13 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       queryResult.records.forEach((rWithCase: any) => {
         const r = keysToLowerCase(rWithCase)
 
-        if (extId2OldId[r[extId]] && r.id) {
-          if (extId2OldId[r[extId]] != r.id) {
-            this.ux.log(`${extId2OldId[r[extId]]} => ${r.id}`);
-            idmap[extId2OldId[r[extId]]] = r.id;
+        if (extId2OldId[r[extId]] && r['id']) {
+          if (extId2OldId[r[extId]] != r['id']) {
+            this.ux.log(`${extId2OldId[r[extId]]} => ${r['id']}`);
+            idmap[extId2OldId[r[extId]]] = r['id'];
           }
         } else {
-          this.ux.log(`MISSING => ${r.id}`);
+          this.ux.log(`MISSING => ${r['id']}`);
         }
       });
       /* tslint:enable */
