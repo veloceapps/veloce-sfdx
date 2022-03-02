@@ -198,7 +198,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
       }
       const ids = []
       const extId2Values: { [key: string]: object; } = {}
-      const extId2OldValues: { [key: string]: object; } = {}
+      //const extId2OldValues: { [key: string]: object; } = {}
 
       batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
