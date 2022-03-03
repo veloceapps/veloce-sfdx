@@ -323,7 +323,7 @@ ${objects}
       batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
         const oldOrgValue = extId2OldOrgValues[r[extId]]
-        const changeType = this.hasChanges(idmap, extId, oldOrgValue, r)
+        const changeType = this.hasChanges(idmap, ignorefields, extId, oldOrgValue, r)
 
         if (r['id'] && newIds[r[extId]]) {
           this.ux.log(`${r['id']} => ${newIds[r[extId]]} <${changeType}>`)
@@ -333,7 +333,7 @@ ${objects}
         } else {
           this.ux.log(`${r['id'] ? r['id'] : 'MISSING'} => ${newIds[r[extId]] ? newIds[r[extId]] : '??????????????????'} <${changeType}>`)
         }
-        this.printChanges(idmap, extId, oldOrgValue, r)
+        this.printChanges(idmap, ignorefields, extId, oldOrgValue, r)
       })
 
       /* tslint:enable */
@@ -353,9 +353,12 @@ ${objects}
     return {orgId: this.org.getOrgId()}
   }
 
-  public hasChanges(idmap: object, extId: string, oldObj: object, obj: object): 'NEW'|'CHANGE'|'UNCHANGED' {
+  public hasChanges(idmap: object, ignorefields: string[], extId: string, oldObj: object, obj: object): 'NEW'|'CHANGE'|'UNCHANGED' {
     for (const k of Object.keys(obj)) {
       if (!k) {
+        continue
+      }
+      if (ignorefields.includes(k)) {
         continue
       }
       if (k === 'id') {
@@ -376,9 +379,12 @@ ${objects}
     return 'UNCHANGED'
   }
 
-  public printChanges(idmap: object, extId: string, oldObj: object, obj: object) {
+  public printChanges(idmap: object, ignorefields: string[], extId: string, oldObj: object, obj: object) {
     for (const k of Object.keys(obj)) {
       if (k === 'id') {
+        continue
+      }
+      if (ignorefields.includes(k)) {
         continue
       }
       if (!k) {
@@ -393,7 +399,7 @@ ${objects}
         o = idmap[obj[k]]
       }
       if ('' + oldObj[k] !== '' + o && (!(oldObj[k] === null && o === ''))) {
-        this.ux.log(`  ${k}: ${oldObj[k]} => ${o}`)
+        this.ux.log(`  ${k}: ${oldObj[k] === undefined ? '' : ('' + oldObj[k]).length > 128 ? '...' : oldObj[k]} => ${('' + o).length > 128 ? '...' : o}`)
       }
     }
   }
