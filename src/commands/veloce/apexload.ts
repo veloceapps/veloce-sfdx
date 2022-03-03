@@ -124,6 +124,7 @@ export default class Org extends SfdxCommand {
     const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : []
     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : []
     const upsert = this.flags.upsert || false
+    const dry = this.flags.dry || false
 
     if (!ignorefields.includes('id')) {
       ignorefields.push('id')
@@ -147,9 +148,10 @@ export default class Org extends SfdxCommand {
     // retrieve types of args
     const conn = this.org.getConnection()
     const fieldsResult = await conn.autoFetchQuery(`
-SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
-FROM FieldDefinition
-WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
+      SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+      FROM FieldDefinition
+      WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
+      ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000})
 
     for (const f of fieldsResult.records) {
@@ -192,34 +194,38 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
 
     while (true) {
       const batch = records.slice(batchSize * currentBatch, batchSize * (currentBatch + 1))
-      console.log(`batch#${currentBatch} size: ${batch.length}`)
+      this.ux.log(`batch#${currentBatch} size: ${batch.length}`)
       if (batch.length === 0) {
         break
       }
-      const ids = []
-      const extId2Values: { [key: string]: object; } = {}
-      //const extId2OldValues: { [key: string]: object; } = {}
+      const ids: string[] = []
+      let extId2OldOrgValues: { [key: string]: object; } = {}
 
       batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
         ids.push(r[extId])
-        extId2Values[r[extId]] = r
       })
       let script = ''
       let objects = ''
       const idsToValidate = []
-      //let keys = []
+      let keys = []
       for (const rWithCase of batch) {
         const r = keysToLowerCase(rWithCase)
-        //keys = Object.keys(r)
 
         const fields = []
+        const currentKeys = []
         for (const [k, value] of Object.entries(r)) {
 
           let s = '' + value
           if (ignorefields.includes(k)) {
             continue
           }
+
+          if (!currentKeys.includes(k)) {
+            currentKeys.push(k)
+          }
+          keys = currentKeys
+
           if (idReplaceFields.includes(k)) {
             for (const [key, v] of Object.entries(idmap)) {
               const olds = s
@@ -252,14 +258,12 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
               idsToValidate.push(s)
             }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
-                .replaceAll('\\', '\\\\')
-                .replaceAll('\'', '\\\'')
-                .replaceAll('\n', '\\n')
-                .replaceAll('\r', '\\r')}'`)
+              .replaceAll('\\', '\\\\')
+              .replaceAll('\'', '\\\'')
+              .replaceAll('\n', '\\n')
+              .replaceAll('\r', '\\r')}'`)
           }
         }
-
-        //extId2OldValues[r[extId]] = await this.getOldRecord(conn, keys, sType, extId, r[extId])
 
         if (upsert) {
           for (const vid of idsToValidate) {
@@ -279,6 +283,8 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         }
       }
 
+      extId2OldOrgValues = await this.getOldRecords(conn, keys, sType, extId, ids)
+
       if (upsert) {
         script = `
 ${sType} [] o = new List<${sType}>();
@@ -293,61 +299,52 @@ ${objects}
 `
       }
 
-      const exec = new apexNode.ExecuteService(conn)
-      const execAnonOptions = Object.assign({}, {apexCode: script})
-      const result = await exec.executeAnonymous(execAnonOptions)
+      if (!dry) {
+        const exec = new apexNode.ExecuteService(conn)
+        const execAnonOptions = Object.assign({}, {apexCode: script})
+        const result = await exec.executeAnonymous(execAnonOptions)
 
-      if (!result.success) {
-        ok = false
-        const out = this.formatDefault(result)
-        this.ux.log(out)
-        output += `${out}\n`
-        this.ux.log('Executed Script START')
-        this.ux.log(script)
-        this.ux.log('Executed Script END')
-        output += `${out}\n`
+        if (!result.success) {
+          ok = false
+          const out = this.formatDefault(result)
+          this.ux.log(out)
+          output += `${out}\n`
+          this.ux.log('Executed Script START')
+          this.ux.log(script)
+          this.ux.log('Executed Script END')
+          output += `${out}\n`
+        }
+      } else {
+        this.ux.log('No Data Updated, because running in DRY mode')
       }
+
       // Query back Ids
-      const query = `SELECT Id,${extId} FROM ${sType} WHERE ${extId} in ('${ids.join('\',\'')}')`
-      const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger)
-      if (!queryResult.done) {
-        throw new SfdxError(`Query not done: ${query}`, 'ApexError')
-      }
-      /* tslint:disable */
-      queryResult.records.forEach((rWithCase: any) => {
+      const newIds = await this.getIds(conn, sType, extId, ids)
+      batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
+        const oldOrgValue = extId2OldOrgValues[r[extId]]
+        const changeType = this.hasChanges(idmap, extId, oldOrgValue, r)
 
-        if (extId2Values[r[extId]]['id'] && r['id']) {
-          if (extId2Values[r[extId]]['id'] != r['id']) {
-            this.ux.log(`${extId2Values[r[extId]]['id']} => ${r['id']}`);
-            idmap[extId2Values[r[extId]]['id']] = r['id'];
+        if (r['id'] && newIds[r[extId]]) {
+          this.ux.log(`${r['id']} => ${newIds[r[extId]]} <${changeType}>`)
+          if (r['id'] !== newIds[r[extId]]) {
+            idmap[r['id']] = newIds[r[extId]]
           }
         } else {
-          this.ux.log(`MISSING => ${r['id']}`);
+          this.ux.log(`${r['id'] ? r['id'] : 'MISSING'} => ${newIds[r[extId]] ? newIds[r[extId]] : '??????????????????'} <${changeType}>`)
         }
-        //const obj = extId2Values[r[extId]]
-        //const oldObj = extId2OldValues[r[extId]]
-        //for (const k of Object.keys(obj)) {
-        //  if (!oldObj) {
-        //    this.ux.log(`  NEW: ${obj[k]}`)
-        //    continue
-        //  }
-        //  if (!k) {
-        //    continue
-        //  }
-        //  if (k === 'id') {
-        //    continue
-        //  }
-        //  if (oldObj[k] !== obj[k] && (!(oldObj[k] === null && obj[k] === ''))) {
-        //    this.ux.log(`  CHANGE: ${oldObj[k]} => ${obj[k]}`)
-        //  }
-        //}
-      });
+        this.printChanges(idmap, extId, oldOrgValue, r)
+      })
+
       /* tslint:enable */
       currentBatch++
     }
 
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'})
+    if (!dry) {
+      fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'})
+    } else {
+      this.ux.log(`Skipping write to idmap file because in dry mode: ${this.flags.idmap}`)
+    }
     if (!ok) {
       throw new SfdxError(output, 'ApexError')
     }
@@ -356,9 +353,57 @@ ${objects}
     return {orgId: this.org.getOrgId()}
   }
 
-  public async getOldRecord(conn: Connection, keys: string[], sType: string, extIdField: string, extId: string) {
+  public hasChanges(idmap: object, extId: string, oldObj: object, obj: object): 'NEW'|'CHANGE'|'UNCHANGED' {
+    for (const k of Object.keys(obj)) {
+      if (!k) {
+        continue
+      }
+      if (k === 'id') {
+        continue
+      }
+      if (!oldObj) {
+        return 'NEW'
+      }
+      let o = obj[k]
+      if (k !== extId && idmap[obj[k]]) {
+        o = idmap[obj[k]]
+      }
+      if ('' + oldObj[k] !== '' + o && (!(oldObj[k] === null && o === ''))) {
+        return 'CHANGE'
+      }
+
+    }
+    return 'UNCHANGED'
+  }
+
+  public printChanges(idmap: object, extId: string, oldObj: object, obj: object) {
+    for (const k of Object.keys(obj)) {
+      if (k === 'id') {
+        continue
+      }
+      if (!k) {
+        continue
+      }
+      if (!oldObj) {
+        this.ux.log(`  ${k}: ${obj[k]}`)
+        continue
+      }
+      let o = obj[k]
+      if (k !== extId && idmap[obj[k]]) {
+        o = idmap[obj[k]]
+      }
+      if ('' + oldObj[k] !== '' + o && (!(oldObj[k] === null && o === ''))) {
+        this.ux.log(`  ${k}: ${oldObj[k]} => ${o}`)
+      }
+    }
+  }
+
+  public async getOldRecords(conn: Connection, keys: string[], sType: string, extIdField: string, ids: string[]): Promise<{ [key: string]: object; }> {
+    const extId2OldValues: { [key: string]: object; } = {}
     // Query back Ids
-    const query = `SELECT ${keys.join(',')} FROM ${sType} WHERE ${extIdField} = '${extId}'`
+    const query = `SELECT ${keys.join(',')}
+                   FROM ${sType}
+                   WHERE ${extIdField} in ('${ids.join('\',\'')}')`
 
     const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger)
 
@@ -366,11 +411,31 @@ ${objects}
       throw new SfdxError(`Query not done: ${query}`, 'ApexError')
     }
     /* tslint:disable */
-    let r: any
     queryResult.records.forEach((rWithCase: any) => {
-      r = keysToLowerCase(rWithCase)
+      const r = keysToLowerCase(rWithCase)
+      extId2OldValues[r[extIdField]] = r
     });
-    return r
+    return extId2OldValues
+  }
+
+  public async getIds(conn: Connection, sType: string, extIdField: string, ids: string[]): Promise<{ [key: string]: string; }> {
+    const extId2OldValues: { [key: string]: string; } = {}
+    // Query back Ids
+    const query = `SELECT Id,${extIdField}
+                   FROM ${sType}
+                   WHERE ${extIdField} in ('${ids.join('\',\'')}')`
+
+    const queryResult: QueryResult<unknown> = await this.runSoqlQuery(conn, query, this.logger)
+
+    if (!queryResult.done) {
+      throw new SfdxError(`Query not done: ${query}`, 'ApexError')
+    }
+    /* tslint:disable */
+    queryResult.records.forEach((rWithCase: any) => {
+      const r = keysToLowerCase(rWithCase)
+      extId2OldValues[r[extIdField]] = r['id']
+    });
+    return extId2OldValues
   }
 
   public async runSoqlQuery(connection: Connection | Tooling, query: string, logger: Logger
