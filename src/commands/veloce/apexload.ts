@@ -399,7 +399,7 @@ ${objects}
         o = idmap[obj[k]]
       }
       if ('' + oldObj[k] !== '' + o && (!(oldObj[k] === null && o === ''))) {
-        this.ux.log(`  ${k}: ${oldObj[k] === undefined ? '' : ('' + oldObj[k]).length > 128 ? '...' : oldObj[k]} => ${('' + o).length > 128 ? '...' : o}`)
+        this.ux.log(`  ${k}: ${oldObj[k] === undefined ? '' : ('' + oldObj[k]).length > 512 ? '...' : oldObj[k]} => ${('' + o).length > 512 ? '...' : o}`)
       }
     }
   }
