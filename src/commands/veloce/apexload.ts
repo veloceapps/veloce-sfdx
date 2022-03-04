@@ -391,7 +391,7 @@ ${objects}
         continue
       }
       if (!oldObj) {
-        this.ux.log(`  ${k}: ${obj[k]}`)
+        this.ux.log(`  ${k}: ${(''+obj[k]).length > 512 ? '...' : obj[k]}`)
         continue
       }
       let o = obj[k]
