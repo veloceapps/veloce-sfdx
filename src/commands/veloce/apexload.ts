@@ -100,6 +100,7 @@ export default class Org extends SfdxCommand {
     printids: flags.boolean({char: 'P', description: messages.getMessage('printidsFlagDescription'), required: false}),
     upsert: flags.boolean({char: 'U', description: messages.getMessage('upsertFlagDescription'), required: false}),
     dry: flags.boolean({char: 'd', description: messages.getMessage('dryFlagDescription'), required: false}),
+    diff: flags.boolean({char: 'D', description: messages.getMessage('diffFlagDescription'), required: false}),
     file: flags.string({char: 'f', description: messages.getMessage('fileFlagDescription'), required: true}),
     idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
@@ -125,6 +126,7 @@ export default class Org extends SfdxCommand {
     const idReplaceFields = this.flags.idreplacefields ? this.flags.idreplacefields.toLowerCase().split(',') : []
     const upsert = this.flags.upsert || false
     const dry = this.flags.dry || false
+    let diff = this.flags.diff || true
 
     if (!ignorefields.includes('id')) {
       ignorefields.push('id')
@@ -169,6 +171,11 @@ export default class Org extends SfdxCommand {
     }
 
     const records = parse(fileContent, {columns: true, bom: true})
+
+    if (records.length > 128 && !this.flags.diff) {
+       this.ux.log('Turning off Auto-Diff mode because too much data, use --diff to force it ON')
+       diff = false
+    }
 
     let hasFailedExtIds = false
     const seenExtIds = []
@@ -283,7 +290,7 @@ export default class Org extends SfdxCommand {
         }
       }
 
-      extId2OldOrgValues = await this.getOldRecords(conn, keys, sType, extId, ids)
+      extId2OldOrgValues = diff ? await this.getOldRecords(conn, keys, sType, extId, ids) : {}
 
       if (upsert) {
         script = `
@@ -322,8 +329,14 @@ ${objects}
       const newIds = await this.getIds(conn, sType, extId, ids)
       batch.forEach(rWithCase => {
         const r = keysToLowerCase(rWithCase)
-        const oldOrgValue = extId2OldOrgValues[r[extId]]
-        const changeType = this.hasChanges(idmap, ignorefields, extId, oldOrgValue, r)
+        let changeType: string
+        let oldOrgValue: object
+        if (diff) {
+          oldOrgValue = extId2OldOrgValues[r[extId]]
+          changeType = this.hasChanges(idmap, ignorefields, extId, oldOrgValue, r)
+        } else {
+          changeType = ''
+        }
 
         if (r['id'] && newIds[r[extId]]) {
           this.ux.log(`${r['id']} => ${newIds[r[extId]]} <${changeType}>`)
@@ -333,7 +346,9 @@ ${objects}
         } else {
           this.ux.log(`${r['id'] ? r['id'] : 'MISSING'} => ${newIds[r[extId]] ? newIds[r[extId]] : '??????????????????'} <${changeType}>`)
         }
-        this.printChanges(idmap, ignorefields, extId, oldOrgValue, r)
+        if (diff) {
+          this.printChanges(idmap, ignorefields, extId, oldOrgValue, r)
+        }
       })
 
       /* tslint:enable */
@@ -391,7 +406,7 @@ ${objects}
         continue
       }
       if (!oldObj) {
-        this.ux.log(`  ${k}: ${(''+obj[k]).length > 512 ? '...' : obj[k]}`)
+        this.ux.log(`  ${k}: ${('' + obj[k]).length > 512 ? '...' : obj[k]}`)
         continue
       }
       let o = obj[k]

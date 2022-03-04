@@ -4,6 +4,7 @@
   "idmapFlagDescription": "idmap.json file path, to store/load <csvId:targetId> pairs",
   "upsertFlagDescription": "Should use APEX upsert (could insert extra records) or update-only APEX (one by one), which is default",
   "dryFlagDescription": "Dont change data, just run in dry mode",
+  "diffFlagDescription": "Force diff mode ON, it will show differences for each record which is upserted/inserted. Default: ON if < 128 records and off otherwise.",
   "externalidFlagDescription": "The column name of the external ID.",
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during load",
   "batchFlagDescription": "Size of batch, to avoid getting 'script is too large'",
