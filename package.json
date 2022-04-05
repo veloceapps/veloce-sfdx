@@ -26,6 +26,7 @@
     "yosay": "^2.0.2",
 
     "@salesforce/apex-node": "^0.11.0",
+    "@salesforce/command": "^5.0.4",
     "csv-parse": "^4.15.3",
     "csv-write-stream": "^2.0.0",
     "csv-writer": "^1.6.0",
