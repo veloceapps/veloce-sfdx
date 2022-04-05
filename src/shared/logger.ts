@@ -14,26 +14,28 @@
 
 /**
  * Wrapper function for console.log
+ *
  * @param message Message to log
  */
-export function info(message: string) {
+export function info(message: string): void {
   if (!__dirname.includes('/test/')) {
-    console.log(message)
+    console.log(message);
   }
 }
 
 /**
  * Wrapper function for console.error
+ *
  * @param message Error message
  */
-export function error(message: string) {
-  console.error(message)
+export function error(message: string): void {
+  console.error(message);
 }
 
-export function start(message: string) {
-  process.stdout.write(`${message}... `)
+export function start(message: string): void {
+  process.stdout.write(`${message}... `);
 }
 
-export function done() {
-  console.log('done')
+export function done(): void {
+  console.log('done');
 }

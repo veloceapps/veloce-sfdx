@@ -8,4 +8,8 @@
 module.exports = {
   extends: ["eslint-config-salesforce-typescript"],
   parser: "@typescript-eslint/parser",
+  rules: {
+    "prettier/prettier": "off",
+    "no-console": "off"
+  }
 };
