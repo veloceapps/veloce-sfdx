@@ -11,7 +11,7 @@ module.exports = {
   parserOptions: {
     sourceType: "module",
     tsconfigRootDir: __dirname,
-    project: ["./tsconfig.json"]
+    project: ["./tsconfig.json", "./tsconfig-test.json"]
   },
   rules: {
     "prettier/prettier": "off",
