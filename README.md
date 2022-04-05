@@ -2,7 +2,7 @@
 [![CircleCI](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master.svg?style=shield)](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master)
 
 ```
-Commands to load/dump/sort SF data
+Loads data into org, by creation of Anonymous apex code and it's execution. Operation is working in two modes: Update only (default) and Upsert --upsert. After each batch SOQL query is performed and ID Map file is populated with OldId=>NewId mappings
 
 USAGE
   $ sfdx veloce:COMMAND
