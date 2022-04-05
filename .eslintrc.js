@@ -8,8 +8,14 @@
 module.exports = {
   extends: ["eslint-config-salesforce-typescript"],
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    sourceType: "module",
+    tsconfigRootDir: __dirname,
+    project: ["./tsconfig.json"]
+  },
   rules: {
     "prettier/prettier": "off",
-    "no-console": "off"
-  }
+    "no-console": "off",
+    "@typescript-eslint/prefer-regexp-exec": "off"
+  },
 };
