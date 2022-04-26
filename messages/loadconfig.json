@@ -1,0 +1,4 @@
+{
+  "commandDescription": "Loads data from PML and UI Model into org",
+  "foldernameFlagDescription": "name of folder to pack and upload"
+}
