@@ -15,10 +15,7 @@ export default class Org extends SfdxCommand {
 
   public static examples = [
   `$ sfdx veloce:loadconfig
-  Configuration Settings successfully loaded.
-  `,
-  `$ sfdx veloce:loadconfig
-  Configuration Settings successfully loaded.
+  Configuration Settings successfully loaded!
   `
   ]
 
@@ -62,15 +59,17 @@ export default class Org extends SfdxCommand {
       result.push(output)
     })
     const headers = {
-      'DebugSessionId': debugSession.session
+      'DebugSessionId': debugSession.session,
     }
     let logs
     try {
       logs = await axios.post(`${debugSession.backendUrl}/api/debug/config`, result, headers)
       this.ux.log(logs.data)
     } catch (e) {
-      this.ux.log(`Failed to get logs`)
+      this.ux.log(`Failed to save configuration settings`)
+      return {}
     }
+    this.ux.log(`Configuration Settings successfully loaded!`)
     // Return an object to be displayed with --json
     return { configurationSettings: result}
   }

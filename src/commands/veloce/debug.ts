@@ -72,14 +72,14 @@ export default class Org extends SfdxCommand {
     }
     const backendUrl = orgInfo.data['BackendURL']
     this.ux.log(`Starting debug of backend: ${backendUrl}`)
-    const headers = { 'VeloceSfAccessToken': accessToken }
+    const headers = { 'VeloceSfAccessToken': accessToken, 'VeloceOrgId': orgId }
     const params = { }
     let debugSession
     try {
       debugSession = await axios.post(`${backendUrl}/api/debug/start`, params, headers)
     } catch (e) {
       this.ux.log("Failed to start debug session")
-      return {}
+      //return {}
     }
     const fs = require("fs")
     const os = require('os')
@@ -91,13 +91,12 @@ export default class Org extends SfdxCommand {
       fs.mkdirSync(veloceHome);
     } catch (e) {}
 
-
     const debugSessionId = debugSession ? debugSession.data : 'invalid_session'
     const debugSessionFile = path.join(veloceHome, 'debug.session');
 
     try {
       fs.writeFileSync(debugSessionFile,
-        JSON.stringify({session: debugSessionId, backendUrl: backendUrl}),
+        JSON.stringify({session: debugSessionId, backendUrl: backendUrl, orgId: orgId}),
         {
           encoding: "utf8",
           flag: "w+",
