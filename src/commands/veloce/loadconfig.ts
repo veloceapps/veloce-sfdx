@@ -1,5 +1,5 @@
 import { SfdxCommand } from '@salesforce/command'
-import { Messages, SfdxError } from '@salesforce/core'
+import { Messages } from '@salesforce/core'
 import { AnyJson } from '@salesforce/ts-types'
 
 // Initialize Messages with the current plugin directory
@@ -14,66 +14,64 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:loadconfig -u my-org-alias
+  `$ sfdx veloce:loadconfig
   Configuration Settings successfully loaded.
   `,
-  `$ sfdx veloce:loadconfig --targetusername my-org-alias
+  `$ sfdx veloce:loadconfig
   Configuration Settings successfully loaded.
   `
   ]
 
-  public static args = [{name: 'file'}]
+  public static args = []
 
   protected static flagsConfig = {
   }
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = true
+  protected static requiresUsername = false
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true
+  protected static supportsDevhubUsername = false
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
-    const conn = this.org.getConnection()
-    const query = 'Select Name, TrialExpirationDate from Organization'
+    const fs = require("fs")
+    const os = require('os')
+    const path = require('path')
+    const axios = require('axios').default;
 
-    // The type we are querying for
-    interface Organization {
-      Name: string
-      TrialExpirationDate: string
+    const homedir = os.homedir()
+    const debugSessionFile = path.join(homedir, '.veloce-sfdx/debug.session');
+    let debugSession
+    try {
+      debugSession = JSON.parse(fs.readFileSync(debugSessionFile).toString())
+    } catch(e) {
+      this.ux.log(`No active debug session found, please start debug session using veloce:debug`)
+      return {}
     }
 
-    // Query the org
-    const result = await conn.query<Organization>(query)
-
-    // Organization will always return one result, but this is an example of throwing an error
-    // The output and --json will automatically be handled for you.
-    if (!result.records || result.records.length <= 0) {
-      throw new SfdxError(messages.getMessage('errorNoOrgResults', [this.org.getOrgId()]))
+    const result = []
+    fs.readdirSync('ConfigurationSettings').forEach(file => {
+      this.ux.log('processing configuration file:', file)
+      const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: '', VELOCPQ__ReferenceId__c: ''}
+      output.VELOCPQ__Value__c = fs.readFileSync('ConfigurationSettings/' + file, 'UTF-8').toString()
+      output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file
+      output.VELOCPQ__ReferenceId__c = output.VELOCPQ__Key__c
+      result.push(output)
+    })
+    const headers = {
+      'DebugSessionId': debugSession.session
     }
-
-    // Organization always only returns one result
-    const orgName = result.records[0].Name
-    const trialExpirationDate = result.records[0].TrialExpirationDate
-
-    let outputString = `Hello This is org: ${orgName}`
-    if (trialExpirationDate) {
-      const date = new Date(trialExpirationDate).toDateString()
-      outputString = `${outputString} and I will be around until ${date}!`
+    let logs
+    try {
+      logs = await axios.post(`${debugSession.backendUrl}/api/debug/config`, result, headers)
+      this.ux.log(logs.data)
+    } catch (e) {
+      this.ux.log(`Failed to get logs`)
     }
-    this.ux.log(outputString)
-
-    // this.hubOrg is NOT guaranteed because supportsHubOrgUsername=true, as opposed to requiresHubOrgUsername.
-    if (this.hubOrg) {
-      const hubOrgId = this.hubOrg.getOrgId()
-      this.ux.log(`My hub org id is: ${hubOrgId}`)
-    }
-
     // Return an object to be displayed with --json
-    return { orgId: this.org.getOrgId(), outputString }
+    return { configurationSettings: result}
   }
 }

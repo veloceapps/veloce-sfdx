@@ -93,11 +93,11 @@ export default class Org extends SfdxCommand {
 
 
     const debugSessionId = debugSession ? debugSession.data : 'invalid_session'
-    const debugSessionFile = path.join(veloceHome, 'debug.session.id');
+    const debugSessionFile = path.join(veloceHome, 'debug.session');
 
     try {
       fs.writeFileSync(debugSessionFile,
-        debugSessionId,
+        JSON.stringify({session: debugSessionId, backendUrl: backendUrl}),
         {
           encoding: "utf8",
           flag: "w+",
@@ -118,6 +118,7 @@ export default class Org extends SfdxCommand {
       try {
         logs = await axios.post(`${backendUrl}/api/debug/logs`, logsParams, logsHeaders)
         this.ux.log(logs.data)
+        logsHeaders['ContinuationToken'] = logs.headers['ContinuationToken']
       } catch (e) {
         this.ux.log(`Failed to get logs`)
       }
