@@ -1,3 +1,4 @@
 {
-  "commandDescription": "Starts new ISOLATED debug session and streams backend logs"
+  "commandDescription": "Starts new ISOLATED debug session and streams backend logs",
+  "targetFlagDescription": "Alias of existing org"
 }
