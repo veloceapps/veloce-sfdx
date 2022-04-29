@@ -1,5 +1,5 @@
-import { SfdxCommand } from '@salesforce/command'
-import { Messages, SfdxError } from '@salesforce/core'
+import {flags, SfdxCommand} from '@salesforce/command'
+import {Messages} from '@salesforce/core'
 import { AnyJson } from '@salesforce/ts-types'
 
 // Initialize Messages with the current plugin directory
@@ -14,17 +14,24 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:loadmodel -u my-org-alias
-  Model ABC Successfully Loaded!
+  `$ sfdx veloce:loadmodel -n CPQ
+  Model CPQ Successfully Loaded!
   `,
-  `$ sfdx veloce:loadmodel --targetusername my-org-alias
-  Model ABC Successfully Loaded!
+  `$ sfdx veloce:loadmodel --name CPQ
+  Model CPQ Successfully Loaded!
   `
   ]
 
-  public static args = [{name: 'file'}]
+  public static args = []
 
   protected static flagsConfig = {
+    // flag with a value (-n, --name=VALUE)
+    name: flags.boolean({
+      char: 'n',
+      default: false,
+      description: messages.getMessage('nameFlagDescription'),
+      required: false
+    })
   }
 
   // Comment this out if your command does not require an org username
@@ -37,43 +44,104 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
-    const conn = this.org.getConnection()
-    const query = 'Select Name, TrialExpirationDate from Organization'
+    const fs = require("fs")
+    const os = require('os')
+    const path = require('path')
+    const axios = require('axios').default;
 
-    // The type we are querying for
-    interface Organization {
-      Name: string
-      TrialExpirationDate: string
+    const name = this.flags.name
+
+    const homedir = os.homedir()
+    const debugSessionFile = path.join(homedir, '.veloce-sfdx/debug.session');
+    let debugSession
+    try {
+      debugSession = JSON.parse(fs.readFileSync(debugSessionFile).toString())
+    } catch(e) {
+      this.ux.log(`No active debug session found, please start debug session using veloce:debug`)
+      return {}
     }
 
-    // Query the org
-    const result = await conn.query<Organization>(query)
-
-    // Organization will always return one result, but this is an example of throwing an error
-    // The output and --json will automatically be handled for you.
-    if (!result.records || result.records.length <= 0) {
-      throw new SfdxError(messages.getMessage('errorNoOrgResults', [this.org.getOrgId()]))
+    const headers = {
+      'DebugSessionId': debugSession.session,
+      'Content-Type': 'application/json'
     }
 
-    // Organization always only returns one result
-    const orgName = result.records[0].Name
-    const trialExpirationDate = result.records[0].TrialExpirationDate
-
-    let outputString = `Hello This is org: ${orgName}`
-    if (trialExpirationDate) {
-      const date = new Date(trialExpirationDate).toDateString()
-      outputString = `${outputString} and I will be around until ${date}!`
+    const pml = fs.readFileSync(`models/${name}.pml`).toString()
+    try {
+      await axios.post(`${debugSession.backendUrl}/api/debug/model`, pml, headers)
+    } catch (e) {
+      this.ux.log(`Failed to save PML: ${e.data}`)
+      return {}
     }
-    this.ux.log(outputString)
+    this.ux.log(`PML Successfully Loaded!`)
 
-    // this.hubOrg is NOT guaranteed because supportsHubOrgUsername=true, as opposed to requiresHubOrgUsername.
-    if (this.hubOrg) {
-      const hubOrgId = this.hubOrg.getOrgId()
-      this.ux.log(`My hub org id is: ${hubOrgId}`)
+    const metadataString = fs.readFileSync(`models/${name}/metadata.json`, 'utf-8')
+    const metadataObject = JSON.parse(metadataString)
+    for (const metadata of metadataObject) {
+      for (const section of metadata['sections']) {
+        if (section['templateUrl']) {
+          const p = `models/${section['templateUrl'].trim()}`
+          this.assertPath(p)
+          const b = fs.readFileSync(p)
+          const base64 = b.toString('base64')
+          section['template'] = base64
+          delete section['templateUrl']
+        }
+        if (section['scriptUrl']) {
+          const p = `models/${section['scriptUrl'].trim()}`
+          this.assertPath(p)
+          const b = fs.readFileSync(p)
+          const base64 = b.toString('base64')
+          section['script'] = base64
+          delete section['scriptUrl']
+        }
+        if (section['stylesUrl']) {
+          const p = `models/${section['stylesUrl'].trim()}`
+          this.assertPath(p)
+          const b = fs.readFileSync(p)
+          const base64 = b.toString('base64')
+          section['styles'] = base64
+          delete section['stylesUrl']
+        }
+        if (section['propertiesUrl']) {
+          const p = `models/${section['propertiesUrl'].trim()}`
+          this.assertPath(p)
+          section.properties = this.parseJsonFile(p)
+          delete section['propertiesUrl']
+        }
+      }
     }
+    try {
+      await axios.post(`${debugSession.backendUrl}/api/debug/ui`, JSON.stringify(metadataObject), headers)
+    } catch (e) {
+      this.ux.log(`Failed to save PML: ${e.data}`)
+      return {}
+    }
+    this.ux.log(`UI Successfully Loaded!`)
 
     // Return an object to be displayed with --json
-    return { orgId: this.org.getOrgId(), outputString }
+    return { model: pml, ui: metadataObject}
   }
+
+  private assertPath(p: string) {
+    for (const part of p.split('/')) {
+      if (part.startsWith(' ') || part.endsWith(' ') ||
+        part.startsWith('\t') || part.endsWith('\t')) {
+        this.ux.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`)
+        process.exit(255)
+      }
+    }
+  }
+
+  private parseJsonFile(p: string) {
+    const fs = require("fs")
+    try {
+      const b = fs.readFileSync(p)
+      return JSON.parse(b)
+    } catch (e) {
+      this.ux.log('Failed to read/parse JSON file ', e)
+      process.exit(255)
+    }
+  }
+
 }

@@ -1,4 +1,3 @@
 {
-  "commandDescription": "Loads data from PML and UI Model into org",
-  "foldernameFlagDescription": "name of folder to pack and upload"
+  "commandDescription": "Loads settings from ./ConfigurationSettings/ folder into org"
 }

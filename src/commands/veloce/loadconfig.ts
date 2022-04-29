@@ -60,11 +60,12 @@ export default class Org extends SfdxCommand {
     })
     const headers = {
       'DebugSessionId': debugSession.session,
+      'Content-Type': 'application/json'
     }
-    let logs
+    let configSettings
     try {
-      logs = await axios.post(`${debugSession.backendUrl}/api/debug/config`, result, headers)
-      this.ux.log(logs.data)
+      configSettings = await axios.post(`${debugSession.backendUrl}/api/debug/config`, result, headers)
+      this.ux.log(configSettings.data)
     } catch (e) {
       this.ux.log(`Failed to save configuration settings`)
       return {}
