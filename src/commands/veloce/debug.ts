@@ -72,7 +72,11 @@ export default class Org extends SfdxCommand {
     }
     const backendUrl = orgInfo.data['BackendURL']
     this.ux.log(`Starting debug of backend: ${backendUrl}`)
-    const headers = { 'VeloceSfAccessToken': accessToken, 'VeloceOrgId': orgId }
+    const headers = {
+      'VeloceSfAccessToken': accessToken,
+      'VeloceOrgId': orgId,
+      'Content-Type': 'application/json'
+    }
     const params = { }
     let debugSession
     try {
@@ -108,7 +112,8 @@ export default class Org extends SfdxCommand {
     }
 
     const logsHeaders = {
-      'DebugSessionId': debugSessionId
+      'DebugSessionId': debugSessionId,
+      'Content-Type': 'application/json'
     }
     const logsParams = { }
 
