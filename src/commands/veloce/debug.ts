@@ -1,8 +1,6 @@
-import {flags, SfdxCommand} from '@salesforce/command'
-import {AuthInfo, Messages, WebOAuthServer} from '@salesforce/core'
+import {SfdxCommand} from '@salesforce/command'
+import {Messages, Org as oorg} from '@salesforce/core'
 import {AnyJson} from '@salesforce/ts-types'
-import * as open from 'open'
-import {OAuth2Options} from "jsforce";
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -25,16 +23,10 @@ export default class Org extends SfdxCommand {
   ]
 
   public static args = []
-  protected static flagsConfig = {
-    target: flags.string({
-      char: 'u',
-      description: messages.getMessage('targetFlagDescription'),
-      required: true
-    })
-  }
+  protected static flagsConfig = {}
 
   // Comment this out if your command does not require an org username
-  protected static requiresUsername = false
+  protected static requiresUsername = true
 
   // Comment this out if your command does not support a hub org username
   protected static supportsDevhubUsername = false
@@ -43,24 +35,15 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    const alias = this.flags.target
-    const authorizations = await AuthInfo.listAllAuthorizations()
-    const auth = authorizations.find(a => a.alias === alias);
-    if (auth === undefined) {
-      // Return an object to be displayed with --json
-      this.ux.log("no such alias")
-      return {}
-    }
-    this.ux.log(`Login into org ${auth.instanceUrl}`)
-    const newAuthInfo = await this.executeLoginFlow(auth.instanceUrl)
-    const fields = newAuthInfo.getFields(true);
-    const username = fields.username
-    const accessToken = fields.accessToken
-    const refreshToken = fields.refreshToken
-    const instanceUrl = fields.instanceUrl
-    const clientId = fields.clientId
-    const orgId = fields.orgId
-    this.ux.log(`orgId: ${orgId}, clientId: ${clientId}, instanceUrl: ${instanceUrl}, refreshToken: ${refreshToken}, accessToken: ${accessToken}, username: ${username}`)
+    await this.org.refreshAuth(); // we need a live accessToken for the frontdoor url
+    const conn = this.org.getConnection();
+    const accessToken = conn.accessToken;
+    const instanceUrl = this.org.getField(oorg.Fields.INSTANCE_URL) as string;
+    const orgId = this.org.getField(oorg.Fields.ORG_ID) as string;
+
+    const instanceUrlClean = instanceUrl.replace(/\/$/, '');
+
+    this.ux.log (`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&ret_url=https://computing-page-7815-dev-ed--velocpq.visualforce.com/apex/DevTokenRegistration`);
 
     const axios = require('axios').default;
     let orgInfo
@@ -131,23 +114,7 @@ export default class Org extends SfdxCommand {
       })
     }
     // Return an object to be displayed with --json
-    return {username, accessToken, refreshToken, instanceUrl, clientId, orgId}
-    /* Alternative
-      await this.org.refreshAuth(); // we need a live accessToken for the frontdoor url
-      const conn = this.org.getConnection();
-      const accessToken = conn.accessToken;
-      const instanceUrl = this.org.getField(oorg.Fields.INSTANCE_URL) as string;
-      const instanceUrlClean = instanceUrl.replace(/\/$/, '');
-      this.ux.log (`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}`);
-      return {}
-    */
+    return {orgId}
   }
 
-  public async executeLoginFlow(instanceUrl: string): Promise<AuthInfo> {
-    const opts: OAuth2Options = {loginUrl: instanceUrl}
-    const oauthServer = await WebOAuthServer.create({oauthConfig: opts});
-    await oauthServer.start();
-    await open(oauthServer.getAuthorizationUrl(), {wait: false});
-    return oauthServer.authorizeAndSave();
-  }
 }
