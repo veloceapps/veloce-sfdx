@@ -1,6 +1,7 @@
 import {SfdxCommand} from '@salesforce/command'
 import {Messages, Org as oorg} from '@salesforce/core'
 import {AnyJson} from '@salesforce/ts-types'
+import { v4 as uuidv4 } from 'uuid';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -43,7 +44,7 @@ export default class Org extends SfdxCommand {
 
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
 
-    this.ux.log (`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&ret_url=https://computing-page-7815-dev-ed--velocpq.visualforce.com/apex/DevTokenRegistration`);
+    this.ux.log (`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration`);
 
     const axios = require('axios').default;
     let orgInfo
@@ -53,20 +54,23 @@ export default class Org extends SfdxCommand {
       this.ux.log("Failed to get org-info")
       return {}
     }
+    const devToken = uuidv4();
+
     const backendUrl = orgInfo.data['BackendURL']
     this.ux.log(`Starting debug of backend: ${backendUrl}`)
+
+    const params = {"veloceNamespace":"","instanceUrl":`${instanceUrlClean}`,"organizationId":`${orgId}`,"oAuthHeaderValue":`Bearer ${accessToken}`}
     const headers = {
-      'VeloceSfAccessToken': accessToken,
-      'VeloceOrgId': orgId,
+      'dev-token': `${devToken}`,
+      'Authorization': Buffer.from(JSON.stringify(params)).toString('base64'),
       'Content-Type': 'application/json'
     }
-    const params = { }
     let debugSession
     try {
-      debugSession = await axios.post(`${backendUrl}/api/debug/start`, params, headers)
+      debugSession = await axios.post(`${backendUrl}/services/dev-override/auth`, {}, headers)
     } catch (e) {
-      this.ux.log("Failed to start debug session")
-      //return {}
+      this.ux.log(`Failed to start debug session: ${e}`)
+      return {}
     }
     const fs = require("fs")
     const os = require('os')
