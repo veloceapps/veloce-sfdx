@@ -65,9 +65,8 @@ export default class Org extends SfdxCommand {
       'Authorization': Buffer.from(JSON.stringify(params)).toString('base64'),
       'Content-Type': 'application/json'
     }
-    let debugSession
     try {
-      debugSession = await axios.post(`${backendUrl}/services/dev-override/auth`, {}, headers)
+      await axios.post(`${backendUrl}/services/dev-override/auth`, {}, headers)
     } catch (e) {
       this.ux.log(`Failed to start debug session: ${e}`)
       return {}
@@ -82,12 +81,11 @@ export default class Org extends SfdxCommand {
       fs.mkdirSync(veloceHome);
     } catch (e) {}
 
-    const debugSessionId = debugSession ? debugSession.data : 'invalid_session'
     const debugSessionFile = path.join(veloceHome, 'debug.session');
 
     try {
       fs.writeFileSync(debugSessionFile,
-        JSON.stringify({session: debugSessionId, backendUrl: backendUrl, orgId: orgId}),
+        JSON.stringify({token: devToken, backendUrl: backendUrl, orgId: orgId}),
         {
           encoding: "utf8",
           flag: "w+",
@@ -99,7 +97,7 @@ export default class Org extends SfdxCommand {
     }
 
     const logsHeaders = {
-      'DebugSessionId': debugSessionId,
+      'dev-token': devToken,
       'Content-Type': 'application/json'
     }
     const logsParams = { }
@@ -107,7 +105,7 @@ export default class Org extends SfdxCommand {
     while(true) {
       let logs
       try {
-        logs = await axios.post(`${backendUrl}/api/debug/logs`, logsParams, logsHeaders)
+        logs = await axios.post(`${backendUrl}/services/dev-override/logs`, logsParams, logsHeaders)
         this.ux.log(logs.data)
         logsHeaders['ContinuationToken'] = logs.headers['ContinuationToken']
       } catch (e) {

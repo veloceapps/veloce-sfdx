@@ -62,13 +62,13 @@ export default class Org extends SfdxCommand {
     }
 
     const headers = {
-      'DebugSessionId': debugSession.session,
+      'dev-token': debugSession.token,
       'Content-Type': 'application/json'
     }
 
     const pml = fs.readFileSync(`models/${name}.pml`).toString()
     try {
-      await axios.post(`${debugSession.backendUrl}/api/debug/model`, pml, headers)
+      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/pml`, pml, headers)
     } catch (e) {
       this.ux.log(`Failed to save PML: ${e.data}`)
       return {}
@@ -112,7 +112,7 @@ export default class Org extends SfdxCommand {
       }
     }
     try {
-      await axios.post(`${debugSession.backendUrl}/api/debug/ui`, JSON.stringify(metadataObject), headers)
+      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/ui`, JSON.stringify(metadataObject), headers)
     } catch (e) {
       this.ux.log(`Failed to save PML: ${e.data}`)
       return {}
