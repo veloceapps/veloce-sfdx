@@ -16,6 +16,7 @@ COMMANDS
   veloce:dump            Dumps data from Object in org
   veloce:dumpcontentdoc  Dumps data from Document in org
   veloce:dumpdoc         Dumps data from Document in org
+  veloce:dumpui          Dumps ui definitions from Product Model in org
   veloce:fixref          Fix sobjects external id if empty
   veloce:load            Load data into org, by use of standard Salesforce API
   veloce:loadcontentdoc  Dumps data from Document in org
