@@ -1,6 +1,6 @@
 import {flags, SfdxCommand} from '@salesforce/command'
 import {Messages} from '@salesforce/core'
-import { AnyJson } from '@salesforce/ts-types'
+import {AnyJson} from '@salesforce/ts-types'
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -14,10 +14,10 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:loadmodel -n CPQ
+    `$ sfdx veloce:loadmodel -n CPQ
   Model CPQ Successfully Loaded!
   `,
-  `$ sfdx veloce:loadmodel --name CPQ
+    `$ sfdx veloce:loadmodel --name CPQ
   Model CPQ Successfully Loaded!
   `
   ]
@@ -56,7 +56,7 @@ export default class Org extends SfdxCommand {
     let debugSession
     try {
       debugSession = JSON.parse(fs.readFileSync(debugSessionFile).toString())
-    } catch(e) {
+    } catch (e) {
       this.ux.log(`No active debug session found, please start debug session using veloce:debug`)
       return {}
     }
@@ -68,7 +68,7 @@ export default class Org extends SfdxCommand {
 
     const pml = fs.readFileSync(`models/${name}.pml`).toString()
     try {
-      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/pml`, pml, headers)
+      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/pml`, pml, {"headers": headers})
     } catch (e) {
       this.ux.log(`Failed to save PML: ${e.data}`)
       return {}
@@ -112,7 +112,7 @@ export default class Org extends SfdxCommand {
       }
     }
     try {
-      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/ui`, JSON.stringify(metadataObject), headers)
+      await axios.post(`${debugSession.backendUrl}/services/dev-override/model/${name}/ui`, JSON.stringify(metadataObject), {"headers": headers})
     } catch (e) {
       this.ux.log(`Failed to save PML: ${e.data}`)
       return {}
@@ -120,7 +120,7 @@ export default class Org extends SfdxCommand {
     this.ux.log(`UI Successfully Loaded!`)
 
     // Return an object to be displayed with --json
-    return { model: pml, ui: metadataObject}
+    return {model: pml, ui: metadataObject}
   }
 
   private assertPath(p: string) {

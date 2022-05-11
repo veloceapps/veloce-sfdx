@@ -1,6 +1,6 @@
-import { SfdxCommand } from '@salesforce/command'
-import { Messages } from '@salesforce/core'
-import { AnyJson } from '@salesforce/ts-types'
+import {SfdxCommand} from '@salesforce/command'
+import {Messages} from '@salesforce/core'
+import {AnyJson} from '@salesforce/ts-types'
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -14,15 +14,14 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:loadconfig
+    `$ sfdx veloce:loadconfig
   Configuration Settings successfully loaded!
   `
   ]
 
   public static args = []
 
-  protected static flagsConfig = {
-  }
+  protected static flagsConfig = {}
 
   // Comment this out if your command does not require an org username
   protected static requiresUsername = false
@@ -44,7 +43,7 @@ export default class Org extends SfdxCommand {
     let debugSession
     try {
       debugSession = JSON.parse(fs.readFileSync(debugSessionFile).toString())
-    } catch(e) {
+    } catch (e) {
       this.ux.log(`No active debug session found, please start debug session using veloce:debug`)
       return {}
     }
@@ -64,7 +63,7 @@ export default class Org extends SfdxCommand {
     }
     let configSettings
     try {
-      configSettings = await axios.post(`${debugSession.backendUrl}/services/dev-override/config`, result, headers)
+      configSettings = await axios.post(`${debugSession.backendUrl}/services/dev-override/config`, result, {"headers": headers})
       this.ux.log(configSettings.data)
     } catch (e) {
       this.ux.log(`Failed to save configuration settings`)
@@ -72,6 +71,6 @@ export default class Org extends SfdxCommand {
     }
     this.ux.log(`Configuration Settings successfully loaded!`)
     // Return an object to be displayed with --json
-    return { configurationSettings: result}
+    return {configurationSettings: result}
   }
 }

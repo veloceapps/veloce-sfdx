@@ -1,7 +1,7 @@
 import {SfdxCommand} from '@salesforce/command'
 import {Messages, Org as oorg} from '@salesforce/core'
 import {AnyJson} from '@salesforce/ts-types'
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -44,7 +44,7 @@ export default class Org extends SfdxCommand {
 
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
 
-    this.ux.log (`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration`);
+    this.ux.log(`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration`);
 
     const axios = require('axios').default;
     let orgInfo
@@ -59,14 +59,20 @@ export default class Org extends SfdxCommand {
     const backendUrl = orgInfo.data['BackendURL']
     this.ux.log(`Starting debug of backend: ${backendUrl}`)
 
-    const params = {"veloceNamespace":"","instanceUrl":`${instanceUrlClean}`,"organizationId":`${orgId}`,"oAuthHeaderValue":`Bearer ${accessToken}`}
+    const params = {
+      "veloceNamespace": "",
+      "instanceUrl": `${instanceUrlClean}`,
+      "organizationId": `${orgId}`,
+      "oAuthHeaderValue": `Bearer ${accessToken}`
+    }
+    const authorization = Buffer.from(JSON.stringify(params)).toString('base64')
     const headers = {
       'dev-token': `${devToken}`,
-      'Authorization': Buffer.from(JSON.stringify(params)).toString('base64'),
+      'Authorization': authorization,
       'Content-Type': 'application/json'
     }
     try {
-      await axios.post(`${backendUrl}/services/dev-override/auth`, {}, headers)
+      await axios.post(`${backendUrl}/services/dev-override/auth`, {}, {"headers": headers})
     } catch (e) {
       this.ux.log(`Failed to start debug session: ${e}`)
       return {}
@@ -79,7 +85,8 @@ export default class Org extends SfdxCommand {
     const veloceHome = path.join(homedir, '.veloce-sfdx');
     try {
       fs.mkdirSync(veloceHome);
-    } catch (e) {}
+    } catch (e) {
+    }
 
     const debugSessionFile = path.join(veloceHome, 'debug.session');
 
@@ -100,12 +107,12 @@ export default class Org extends SfdxCommand {
       'dev-token': devToken,
       'Content-Type': 'application/json'
     }
-    const logsParams = { }
+    const logsParams = {}
 
-    while(true) {
+    while (true) {
       let logs
       try {
-        logs = await axios.post(`${backendUrl}/services/dev-override/logs`, logsParams, logsHeaders)
+        logs = await axios.post(`${backendUrl}/services/dev-override/logs`, logsParams, {"headers": logsHeaders})
         this.ux.log(logs.data)
         logsHeaders['ContinuationToken'] = logs.headers['ContinuationToken']
       } catch (e) {
