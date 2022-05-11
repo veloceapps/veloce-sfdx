@@ -86,6 +86,7 @@ export default class Org extends SfdxCommand {
     }
 
     const ignoreFields = this.flags.ignorefields?.split(',') || ['CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId']
+    const reverseIdmap: { [key: string]: string; } = {}
     if (this.flags.idmap) {
       let idmap: { [key: string]: string; }
       try {
@@ -94,12 +95,9 @@ export default class Org extends SfdxCommand {
         this.ux.log(`No ID-Map file: ${this.flags.idmap} will not perform reverse-id map!`)
         idmap = {}
       }
-      const reverseIdmap: { [key: string]: string; } = {}
       for (const [key, value] of Object.entries(idmap)) {
         reverseIdmap[value] = key
       }
-    } else {
-      idmap = {}
     }
 
     const writer = csvWriter({
