@@ -26,9 +26,9 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
-    name: flags.boolean({
+    name: flags.string({
       char: 'n',
-      default: false,
+      default: '',
       description: messages.getMessage('nameFlagDescription'),
       required: false
     })
