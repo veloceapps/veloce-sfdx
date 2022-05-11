@@ -56,7 +56,7 @@ export default class Org extends SfdxCommand {
       description: messages.getMessage('sobjecttypeFlagDescription'),
       required: true
     }),
-    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
+    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: false}),
     file: flags.string({
       char: 'f',
       description: messages.getMessage('fileFlagDescription'),
@@ -86,16 +86,20 @@ export default class Org extends SfdxCommand {
     }
 
     const ignoreFields = this.flags.ignorefields?.split(',') || ['CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId']
-    let idmap: { [key: string]: string; }
-    try {
-      idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
-    } catch (err) {
-      this.ux.log(`No ID-Map file: ${this.flags.idmap} will not perform reverse-id map!`)
+    if (this.flags.idmap) {
+      let idmap: { [key: string]: string; }
+      try {
+        idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
+      } catch (err) {
+        this.ux.log(`No ID-Map file: ${this.flags.idmap} will not perform reverse-id map!`)
+        idmap = {}
+      }
+      const reverseIdmap: { [key: string]: string; } = {}
+      for (const [key, value] of Object.entries(idmap)) {
+        reverseIdmap[value] = key
+      }
+    } else {
       idmap = {}
-    }
-    const reverseIdmap: { [key: string]: string; } = {}
-    for (const [key, value] of Object.entries(idmap)) {
-      reverseIdmap[value] = key
     }
 
     const writer = csvWriter({
