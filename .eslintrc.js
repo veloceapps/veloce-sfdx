@@ -18,6 +18,7 @@ module.exports = {
     'no-console': 'off',
     'no-eval': 'off',
     '@typescript-eslint/prefer-regexp-exec': 'off',
-    '@typescript-eslint/no-unsafe-assignment': 'off'
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-explicit-any': 'off'
   }
 };

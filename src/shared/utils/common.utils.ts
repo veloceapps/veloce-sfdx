@@ -1,4 +1,4 @@
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 'fs';
 import { UX } from '@salesforce/command';
 import { IdMap } from '../types/common.types';
 
@@ -18,7 +18,7 @@ export const readIdMap = (path: string, ux?: UX): IdMap => {
 
 export const reverseId = (originalId: string, idmap: IdMap): string => {
   return idmap[originalId] ?? originalId;
-}
+};
 
 export const readFileSafe = (path: string, ux?: UX): string => {
   try {
@@ -35,4 +35,22 @@ export const writeFileSafe = (dir: string, filename: string, data: string): void
     mkdirSync(dir, { recursive: true });
   }
   writeFileSync(`${dir}/${filename}`, data);
+};
+
+export const getDirectoryNames = (dir: string): string[] => {
+  if (!existsSync(dir)) {
+    return [];
+  }
+
+  const result = readdirSync(dir, { withFileTypes: true });
+  return result.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+};
+
+export const getFileNames = (dir: string): string[] => {
+  if (!existsSync(dir)) {
+    return [];
+  }
+
+  const result = readdirSync(dir, { withFileTypes: true });
+  return result.filter(dirent => dirent.isFile()).map(dirent => dirent.name);
 };

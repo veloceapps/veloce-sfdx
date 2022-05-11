@@ -8,11 +8,10 @@ import {
   LegacyUiDefinition,
   UiDef,
   UiDefinition,
-  UiElement,
-  UiElementMetadata
+  UiElement, UiMetadata
 } from '../../shared/types/ui.types';
 import { writeFileSafe } from '../../shared/utils/common.utils';
-import { fromBase64, isLegacyDefinition } from '../../shared/utils/ui.utils';
+import { extractElementMetadata, fromBase64, isLegacyDefinition } from '../../shared/utils/ui.utils';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -21,14 +20,10 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'dumpui');
 
-const METADATA_DECORATOR_REGEX = /@ElementDefinition\(([\s\S]+)\)(\n|.)*export class/g;
-
 export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
-  public static examples = [
-    '$ sfdx veloce:dumpui -n ProductModelName -u username -o models/myui'
-  ];
+  public static examples = ['$ sfdx veloce:dumpui -n ProductModelName -u username -o models/myui'];
 
   public static args = [{ name: 'file' }];
 
@@ -178,7 +173,7 @@ export default class Org extends SfdxCommand {
     }
     if (section.properties) {
       const fileName = `${section.label}.json`;
-      writeFileSafe(dir, fileName, fromBase64(JSON.stringify(section.properties, null, 2)));
+      writeFileSafe(dir, fileName, JSON.stringify(section.properties, null, 2));
       delete sectionMeta.properties;
       sectionMeta.propertiesUrl = `${dir}/${fileName}`;
     }
@@ -187,25 +182,33 @@ export default class Org extends SfdxCommand {
   }
 
   private saveUiDefinition(ui: UiDefinition, path: string): void {
-    const { children, ...metadata } = ui;
-
-    // create UI Definition metadata
-    writeFileSafe(path, 'metadata.json', JSON.stringify(metadata) + '\n');
+    const { children, ...rest } = ui;
 
     // save elements recursively
-    children.forEach(el => this.saveElement(el, path));
+    const childrenNames = children.reduce((acc, child) => {
+      return [...acc, this.saveElement(child, path)];
+    }, [] as string[]);
+
+    // create UI Definition metadata
+    const metadata: UiMetadata = {
+      ...rest,
+      children: childrenNames
+    };
+    writeFileSafe(path, 'metadata.json', JSON.stringify(metadata, null, 2) + '\n');
   }
 
-  private saveElement(el: UiElement, path: string): void {
-    const elName = this.getElementName(el);
+  private saveElement(el: UiElement, path: string): string {
+    // name is located in the Angular decorator which is the part of the element script
+    const script = el.script && fromBase64(el.script);
+    const elName = extractElementMetadata(script).name;
     const elDir = `${path}/${elName}`;
 
     if (!existsSync(elDir)) {
       mkdirSync(elDir, { recursive: true });
     }
 
-    if (el.script) {
-      writeFileSafe(elDir, 'script.ts', fromBase64(el.script));
+    if (script) {
+      writeFileSafe(elDir, 'script.ts', script);
     }
     if (el.styles) {
       writeFileSafe(elDir, 'styles.css', fromBase64(el.styles));
@@ -215,18 +218,7 @@ export default class Org extends SfdxCommand {
     }
 
     el.children.forEach(c => this.saveElement(c, elDir));
-  }
 
-  private getElementName(el: UiElement): string | undefined {
-    // name is located in the Angular decorator which is the part of the element script
-    const script = el.script && fromBase64(el.script);
-
-    const metadataString = (METADATA_DECORATOR_REGEX.exec(script) ?? [])[1];
-
-    // need to reset regex last index to prevent null result for next execution
-    METADATA_DECORATOR_REGEX.lastIndex = 0;
-
-    const metadata = eval(`(${metadataString})`) as UiElementMetadata;
-    return metadata?.name;
+    return elName;
   }
 }
