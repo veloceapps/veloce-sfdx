@@ -11,9 +11,8 @@ import {
   UiElement,
   UiElementMetadata
 } from '../../shared/types/ui.types';
+import { writeFileSafe } from '../../shared/utils/common.utils';
 import { fromBase64, isLegacyDefinition } from '../../shared/utils/ui.utils';
-import { readIdMap, reverseId, writeFileSafe } from '../../shared/utils/common.utils';
-import { IdMap } from '../../shared/types/common.types';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -28,19 +27,17 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-    '$ sfdx veloce:dumpui -i 00Dxx000000001234 -u username -o models/myui',
-    '$ sfdx veloce:dumpui -i 00Dxx000000001234 -u username -o models/myui --idmap=./org-idmap.json '
+    '$ sfdx veloce:dumpui -n ProductModelName -u username -o models/myui'
   ];
 
   public static args = [{ name: 'file' }];
 
   protected static flagsConfig = {
-    id: flags.string({
-      char: 'i',
-      description: messages.getMessage('idFlagDescription'),
+    name: flags.string({
+      char: 'n',
+      description: messages.getMessage('nameFlagDescription'),
       required: true
     }),
-    idmap: flags.string({ char: 'I', description: messages.getMessage('idmapFlagDescription'), required: false }),
     outputdir: flags.string({
       char: 'o',
       description: messages.getMessage('outputpathFlagDescription'),
@@ -58,13 +55,8 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const idmapPath: string | undefined = this.flags.idmap;
-    const idmap = idmapPath ? readIdMap(idmapPath, this.ux) : {};
-
-    // ProductModelId reverse mapping
-    const id = reverseId(this.flags.id as string, idmap);
-
-    const documentId = await this.getDocumentId(id);
+    const modelName: string = this.flags.name;
+    const documentId = await this.getDocumentId(modelName);
     const uiDefs = await this.fetchUiDefinitions(documentId);
     const path = this.flags.outputdir as string;
 
@@ -75,9 +67,9 @@ export default class Org extends SfdxCommand {
       const uiDir = `${path}/${ui.name}`;
 
       if (isLegacyDefinition(ui)) {
-        this.saveLegacyUiDefinition(ui, uiDir, legacyMetadataArray, idmap);
+        this.saveLegacyUiDefinition(ui, uiDir, legacyMetadataArray);
       } else {
-        this.saveUiDefinition(ui, uiDir, idmap);
+        this.saveUiDefinition(ui, uiDir);
       }
     });
 
@@ -89,15 +81,15 @@ export default class Org extends SfdxCommand {
     return {};
   }
 
-  private async getDocumentId(id: string): Promise<string | undefined> {
+  private async getDocumentId(modelName: string): Promise<string | undefined> {
     const conn = this.org.getConnection();
-    const query = `Select VELOCPQ__UiDefinitionsId__c from VELOCPQ__ProductModel__c WHERE Id='${id}'`;
+    const query = `Select VELOCPQ__UiDefinitionsId__c from VELOCPQ__ProductModel__c WHERE Name='${modelName}'`;
 
     const result = await conn.query<{ 'VELOCPQ__UiDefinitionsId__c': string }>(query);
     const [record] = result?.records ?? [];
 
     if (!record) {
-      throw new SfdxError('Product Model not found');
+      throw new SfdxError(`Product Model not found: ${modelName}`);
     }
 
     return record.VELOCPQ__UiDefinitionsId__c;
@@ -131,15 +123,8 @@ export default class Org extends SfdxCommand {
     }
   }
 
-  private saveLegacyUiDefinition(
-    ui: LegacyUiDefinition,
-    path: string,
-    metadataArray: LegacyUiDefinition[],
-    idmap: IdMap
-  ): void {
-    // priceListId reverse mapping
-    const priceList = ui.priceList ? reverseId(ui.priceList, idmap) : undefined;
-    const legacyMetadata: LegacyUiDefinition = { ...ui, priceList, sections: [] };
+  private saveLegacyUiDefinition(ui: LegacyUiDefinition, path: string, metadataArray: LegacyUiDefinition[]): void {
+    const legacyMetadata: LegacyUiDefinition = { ...ui, sections: [] };
 
     ui.tabs.forEach(tab => {
       const tabPath = `${path}/${tab.name}`;
@@ -201,20 +186,10 @@ export default class Org extends SfdxCommand {
     metadata.sections.push(sectionMeta);
   }
 
-  private saveUiDefinition(ui: UiDefinition, path: string, idmap: IdMap): void {
-    const { children, ...rest } = ui;
-
-    // priceListId reverse mapping
-    const priceList = ui.properties?.priceList ? reverseId(ui.properties.priceList, idmap) : undefined;
+  private saveUiDefinition(ui: UiDefinition, path: string): void {
+    const { children, ...metadata } = ui;
 
     // create UI Definition metadata
-    const metadata: Omit<UiDefinition, 'children'> = {
-      ...rest,
-      properties: {
-        ...ui.properties,
-        priceList
-      }
-    };
     writeFileSafe(path, 'metadata.json', JSON.stringify(metadata) + '\n');
 
     // save elements recursively

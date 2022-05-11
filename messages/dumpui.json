@@ -1,6 +1,6 @@
 {
   "commandDescription": "Dumps UI data from Product Model in org. Supports both Legacy and New UiDefinitions",
-  "idFlagDescription": "id of a Product Model to dump",
+  "nameFlagDescription": "name of a Product Model to dump",
   "idmapFlagDescription": "idmap.json file path, to REVERSE map IDs from",
   "outputpathFlagDescription": "relative/full path to write files into"
 }
