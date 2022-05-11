@@ -40,6 +40,7 @@ export default class Org extends SfdxCommand {
     // flag with a value (-n, --name=VALUE)
     name: flags.string({
       char: 'n',
+      default: '',
       description: messages.getMessage('nameFlagDescription'),
       required: false
     })

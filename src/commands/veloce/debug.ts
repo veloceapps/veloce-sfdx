@@ -43,8 +43,9 @@ export default class Org extends SfdxCommand {
     const orgId = this.org.getField(oorg.Fields.ORG_ID) as string;
 
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
+    const devToken = uuidv4();
 
-    this.ux.log(`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration`);
+    this.ux.log(`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration%3Fdev-token=${devToken}`);
 
     const axios = require('axios').default;
     let orgInfo
@@ -54,7 +55,6 @@ export default class Org extends SfdxCommand {
       this.ux.log("Failed to get org-info")
       return {}
     }
-    const devToken = uuidv4();
 
     const backendUrl = orgInfo.data['BackendURL']
     this.ux.log(`Starting debug of backend: ${backendUrl}`)
