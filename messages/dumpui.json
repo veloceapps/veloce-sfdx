@@ -1,0 +1,5 @@
+{
+  "commandDescription": "Dumps UI data from Product Model in org. Supports both Legacy and New UiDefinitions",
+  "nameFlagDescription": "name of a Product Model to dump",
+  "outputpathFlagDescription": "relative/full path to write files into"
+}

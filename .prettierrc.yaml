@@ -1,0 +1,16 @@
+arrowParens: avoid
+bracketSpacing: true
+endOfLine: lf
+htmlWhitespaceSensitivity: css
+insertPragma: false
+printWidth: 120
+proseWrap: preserve
+quoteProps: as-needed
+rangeStart: 0
+requirePragma: false
+semi: true
+singleQuote: true
+tabWidth: 2
+trailingComma: none
+useTabs: false
+semi: false
