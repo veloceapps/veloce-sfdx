@@ -52,7 +52,7 @@ export default class Org extends SfdxCommand {
   // Comment this out if your command does not support a hub org username
   protected static supportsDevhubUsername = true
 
-  // Set this to true if your command requires a project workspace 'requiresProject' is false by default
+  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
