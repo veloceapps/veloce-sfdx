@@ -1,1 +1,1 @@
-export type IdMap = { [key: string]: string };
+export type IdMap = { [key: string]: string }
