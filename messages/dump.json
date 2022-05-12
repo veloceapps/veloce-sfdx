@@ -7,6 +7,7 @@
   "fileFlagDescription": "relative/full path to file to write CSV into",
   "sobjecttypeFlagDescription": "The sObject type of the records you want to dump.",
   "ignoreFieldsFlagDescription": "Coma separated list of fields to ignore during dump",
+  "ignoreFieldsConcatenateFlagDescription": "To be used together with -o flag. Concatenates the default list of ignored fields to the list of fields provided in the -o flag.",
   "onlyfieldsFlagDescription": "Coma separated list of fields to include in export",
   "idreplacefieldsFlagDescription": "Coma separated list of fields in which SF IDs are replaces by mapped Ids by using text search and replace"
 }
