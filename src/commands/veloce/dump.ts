@@ -30,6 +30,8 @@ export default class Org extends SfdxCommand {
 
   public static args = [{name: 'file'}]
 
+  public static defaultIgnoreFields = ['CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId'];
+
   protected static flagsConfig = {
     id: flags.string({
       char: 'i',
@@ -63,6 +65,7 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
+    ignorefieldsconcatenate: flags.boolean({char: 'C', description: messages.getMessage('ignoreFieldsConcatenateFlagDescription')}),
     idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false})
   }
 
@@ -85,7 +88,15 @@ export default class Org extends SfdxCommand {
       }
     }
 
-    const ignoreFields = this.flags.ignorefields?.split(',') || ['CreatedDate', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'IsDeleted', 'IsArchived', 'LastViewedDate', 'LastReferencedDate', 'UserRecordAccessId', 'OwnerId']
+    const { ignorefields, ignorefieldsconcatenate } = this.flags;
+    let ignoreFields;
+    const fieldsToIgnore = ignorefields?.split(',');
+    if (fieldsToIgnore) {
+      ignoreFields = ignorefieldsconcatenate ?  [...Org.defaultIgnoreFields, ...fieldsToIgnore] : fieldsToIgnore;
+    } else {
+      ignoreFields = Org.defaultIgnoreFields;
+    }
+
     const reverseIdmap: { [key: string]: string; } = {}
     if (this.flags.idmap) {
       let idmap: { [key: string]: string; }
