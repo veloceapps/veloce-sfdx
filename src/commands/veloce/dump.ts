@@ -89,11 +89,11 @@ export default class Org extends SfdxCommand {
 
     const { ignorefields } = this.flags;
     let ignoreFields;
-    const match = (/(?<appendMode>\+)?\s*(?<fieldsToIgnore>.*)/).exec(ignorefields);
+    const match = ignorefields?.match(/(?<appendMode>\+)?\s*(?<fieldsToIgnore>.*)/);
     const { appendMode, fieldsToIgnore } = match?.groups ?? {};
     if (fieldsToIgnore) {
       const fieldsArray = fieldsToIgnore?.split(',');
-      ignoreFields = appendMode ?  [...Org.defaultIgnoreFields, ...fieldsArray] : fieldsArray;
+      ignoreFields = appendMode ? [...Org.defaultIgnoreFields, ...fieldsArray] : fieldsArray;
     } else {
       ignoreFields = Org.defaultIgnoreFields;
     }
