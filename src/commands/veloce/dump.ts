@@ -65,7 +65,6 @@ export default class Org extends SfdxCommand {
       required: true
     }),
     ignorefields: flags.string({char: 'o', description: messages.getMessage('ignoreFieldsFlagDescription')}),
-    ignorefieldsconcatenate: flags.boolean({char: 'C', description: messages.getMessage('ignoreFieldsConcatenateFlagDescription')}),
     idreplacefields: flags.string({char: 'R', description: messages.getMessage('idreplacefieldsFlagDescription'), required: false})
   }
 
@@ -88,11 +87,13 @@ export default class Org extends SfdxCommand {
       }
     }
 
-    const { ignorefields, ignorefieldsconcatenate } = this.flags;
+    const { ignorefields } = this.flags;
     let ignoreFields;
-    const fieldsToIgnore = ignorefields?.split(',');
+    const match = (/(?<appendMode>\+)?\s*(?<fieldsToIgnore>.*)/).exec(ignorefields);
+    const { appendMode, fieldsToIgnore } = match?.groups ?? {};
     if (fieldsToIgnore) {
-      ignoreFields = ignorefieldsconcatenate ?  [...Org.defaultIgnoreFields, ...fieldsToIgnore] : fieldsToIgnore;
+      const fieldsArray = fieldsToIgnore?.split(',');
+      ignoreFields = appendMode ?  [...Org.defaultIgnoreFields, ...fieldsArray] : fieldsArray;
     } else {
       ignoreFields = Org.defaultIgnoreFields;
     }
