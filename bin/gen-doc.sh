@@ -1,7 +1,8 @@
 #!/bin/bash
 cat <<EOF > README.md
 [![Version](https://img.shields.io/npm/v/veloce-sfdx.svg)](https://npmjs.org/package/veloce-sfdx)
-[![CircleCI](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master.svg?style=shield)](https://circleci.com/gh/veloceapps/veloce-sfdx/tree/master)
+![unit tests](https://github.com/veloceapps/veloce-sfdx/actions/workflows/unit-tests.yml/badge.svg)
+
 EOF
 echo '' >> README.md
 echo '```' >> README.md
