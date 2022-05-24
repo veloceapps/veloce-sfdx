@@ -45,7 +45,7 @@ export default class Org extends SfdxCommand {
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
     const devToken = uuidv4();
 
-    this.ux.log(`${instanceUrlClean}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/apex/VELOCPQ__DevTokenRegistration%3Fdev-token=${devToken}`);
+    this.ux.log(`${instanceUrlClean}/apex/VELOCPQ__DevTokenRegistration?dev-token=${devToken}`);
 
     const axios = require('axios').default;
     let orgInfo
@@ -103,25 +103,7 @@ export default class Org extends SfdxCommand {
       this.ux.log(`failed to save session: ${e}`)
     }
 
-    const logsHeaders = {
-      'dev-token': devToken,
-      'Content-Type': 'application/json'
-    }
-    const logsParams = {}
 
-    while (true) {
-      let logs
-      try {
-        logs = await axios.post(`${backendUrl}/services/dev-override/logs`, logsParams, {"headers": logsHeaders})
-        this.ux.log(logs.data)
-        logsHeaders['ContinuationToken'] = logs.headers['ContinuationToken']
-      } catch (e) {
-        this.ux.log(`Failed to get logs`)
-      }
-      await new Promise((resolve) => {
-        setTimeout(resolve, 5000);
-      })
-    }
     // Return an object to be displayed with --json
     return {orgId}
   }

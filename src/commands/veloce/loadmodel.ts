@@ -68,9 +68,10 @@ export default class Org extends SfdxCommand {
     const backendUrl: string | undefined = debugSession.backendUrl
 
     // load PML
-    const pml = readFileSync(`models/${name}.pml`).toString()
+    const pml = readFileSync(`models/${name}.pml`, 'utf8').toString()
+
     try {
-      await axios.post(`${backendUrl}/services/dev-override/model/${name}/pml`, pml, {
+      await axios.post(`${backendUrl}/services/dev-override/model/${name}/pml`, {content: pml}, {
         headers
       })
     } catch ({ data }) {
@@ -82,7 +83,7 @@ export default class Org extends SfdxCommand {
     // load UI
     const uiDefs: UiDef[] = new UiDefinitionsBuilder('models', name, {}, this.ux).pack()
     try {
-      await axios.post(`${backendUrl}/services/dev-override/model/${name}/ui`, JSON.stringify(uiDefs), { headers })
+      await axios.post(`${backendUrl}/services/dev-override/model/${name}/ui`, {content: JSON.stringify(uiDefs)}, { headers })
     } catch ({ data }) {
       this.ux.log(`Failed to save PML: ${data as string}`)
       return {}
