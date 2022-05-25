@@ -128,7 +128,7 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     let ok = true
     const output = ''
-    const batchSize = parseInt(this.flags.batch || 10, 10)
+    const batchSize = parseInt((this.flags.batch || '10'), 10)
     const sType = this.flags.sobjecttype.toLowerCase()
     const extId = this.flags.externalid.toLowerCase()
     const ignorefields = this.flags.ignorefields ? this.flags.ignorefields.toLowerCase().split(',') : []
