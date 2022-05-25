@@ -1,0 +1,17 @@
+name: veloce-sfdx
+on: [push]
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - run: |
+          yarn install
+          yarn prepack
+          yarn test
+          ./node_modules/.bin/nyc report --reporter text-lcov > coverage.lcov
+          curl -s https://codecov.io/bash | bash
