@@ -39,9 +39,13 @@ export class UiDefinitionsBuilder {
   public normalizePricelist(uiDefs: UiDef[], pricelistId?: string, strict = false): UiDef[] {
     return uiDefs.map(ui => {
       const originalId = isLegacyDefinition(ui) ? ui.priceList : ui.properties?.priceList
-      const id = pricelistId ?? originalId
 
-      const revertedId = reverseId(pricelistId, this.idmap ?? {})
+      if (!originalId) {
+        return ui
+      }
+
+      const id = pricelistId ?? originalId
+      const revertedId = reverseId(id, this.idmap ?? {})
 
       if (strict && !pricelistId && id === revertedId) {
         throw new SfdxError(
