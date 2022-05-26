@@ -2,6 +2,7 @@ import {SfdxCommand} from '@salesforce/command'
 import {Messages, Org as oorg} from '@salesforce/core'
 import {AnyJson} from '@salesforce/ts-types'
 import {v4 as uuidv4} from 'uuid';
+import * as open from 'open'
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname)
@@ -45,7 +46,9 @@ export default class Org extends SfdxCommand {
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
     const devToken = uuidv4();
 
-    this.ux.log(`${instanceUrlClean}/apex/VELOCPQ__DevTokenRegistration?dev-token=${devToken}`);
+    const sfUrl = `${instanceUrlClean}/apex/VELOCPQ__DevTokenRegistration?dev-token=${devToken}`
+    this.ux.log(sfUrl)
+    open(sfUrl,{wait: false})
 
     const axios = require('axios').default;
     let orgInfo
