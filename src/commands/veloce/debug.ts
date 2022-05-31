@@ -46,7 +46,7 @@ export default class Org extends SfdxCommand {
     const instanceUrlClean = instanceUrl.replace(/\/$/, '');
     const devToken = uuidv4();
 
-    const sfUrl = `${instanceUrlClean}/apex/VELOCPQ__DevTokenRegistration?dev-token=${devToken}`
+    const sfUrl = `${instanceUrlClean}/apex/VELOCPQ__VeloceStudioEmbedded?dev-token=${devToken}`
     this.ux.log(sfUrl)
     open(sfUrl,{wait: false})
 
@@ -95,7 +95,7 @@ export default class Org extends SfdxCommand {
 
     try {
       fs.writeFileSync(debugSessionFile,
-        JSON.stringify({token: devToken, backendUrl: backendUrl, orgId: orgId}),
+        JSON.stringify({token: devToken, backendUrl: backendUrl, orgId: orgId, instanceUrl: instanceUrlClean}),
         {
           encoding: "utf8",
           flag: "w+",

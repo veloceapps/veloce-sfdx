@@ -61,15 +61,22 @@ export default class Org extends SfdxCommand {
       return {}
     }
 
+    const params = {
+      "veloceNamespace": "",
+      "instanceUrl": `${debugSession.instanceUrl}`,
+      "organizationId": `${debugSession.orgId}`,
+      "oAuthHeaderValue": "Dummy"
+    }
+    const authorization = Buffer.from(JSON.stringify(params)).toString('base64')
     const headers = {
       'dev-token': debugSession.token,
+      'Authorization': authorization,
       'Content-Type': 'application/json'
     }
     const backendUrl: string | undefined = debugSession.backendUrl
 
     // load PML
     const pml = readFileSync(`models/${name}.pml`, 'utf8').toString()
-
     try {
       await axios.post(`${backendUrl}/services/dev-override/model/${name}/pml`, {content: pml}, {
         headers
