@@ -17,10 +17,8 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:dumpcontentdoc -i 01521000000gHgnAAE -o file.pml --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
-  `,
-  `$ sfdx veloce:dumpcontentdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
-  `
+  `$ sfdx veloce:dumpcontentdoc -i 01521000000gHgnAAE -o file.doc --targetusername myOrg@example.com --targetdevhubusername devhub@org.com`,
+  `$ sfdx veloce:dumpcontentdoc -i 01521000000gHgnAAE -o file.doc --name myname --targetusername myOrg@example.com`
   ]
 
   public static args = [{name: 'file'}]
