@@ -90,9 +90,9 @@ export default class Org extends SfdxCommand {
     // load UI
     const uiDefs: UiDef[] = new UiDefinitionsBuilder('models', name, {}, this.ux).pack()
     try {
-      await axios.post(`${backendUrl}/services/dev-override/model/${name}/ui`, {content: JSON.stringify(uiDefs)}, { headers })
-    } catch ({ data }) {
-      this.ux.log(`Failed to save PML: ${data as string}`)
+      await axios.post(`${backendUrl}/services/dev-override/model/${name}/ui`, { content: JSON.stringify(uiDefs) }, { headers })
+    } catch ({ response }) {
+      this.ux.log(`Failed to save UI: ${response.statusText}. ${response.data.message}`)
       return {}
     }
     this.ux.log('UI Successfully Loaded!')

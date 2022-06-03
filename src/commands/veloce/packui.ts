@@ -15,7 +15,7 @@ const messages = Messages.loadMessages('veloce-sfdx', 'packui')
 export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
-  public static examples = ['$ sfdx veloce:packui --inputdir . -n BOARDING --outputfile metadata_new.json']
+  public static examples = ['$ sfdx veloce:packui --inputdir . -n BOARDING --outputfile metadata_new.json -I org-idmap.json']
 
   public static args = [{ name: 'file' }]
 
