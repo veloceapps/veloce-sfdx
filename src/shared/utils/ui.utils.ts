@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { UX } from '@salesforce/command'
 import { SfdxError } from '@salesforce/core'
 import { IdMap } from '../types/common.types'
@@ -95,7 +95,7 @@ export class UiDefinitionsBuilder {
 
     const element: UiElement = {
       script: toBase64(script),
-      children: metadata.children.map(childName => this.packUiElement(`${dir}/${childName}`))
+      children: metadata.children?.map(childName => this.packUiElement(`${dir}/${childName}`))
     }
 
     const styles = readFileSafe(`${dir}/styles.css`)
@@ -112,12 +112,13 @@ export class UiDefinitionsBuilder {
   }
 
   private packLegacyUiDefinitions(dir: string): LegacyUiDefinition[] {
-    const metadataString = readFileSync(`${dir}/metadata.json`, 'utf-8')
+    const isExistingFile = existsSync(`${dir}/metadata.json`)
 
-    if (!metadataString) {
+    if (!isExistingFile) {
       return []
     }
 
+    const metadataString = readFileSync(`${dir}/metadata.json`, 'utf-8')
     const legacyDefinitions: LegacyUiDefinition[] = JSON.parse(metadataString)
 
     for (const ui of legacyDefinitions) {
