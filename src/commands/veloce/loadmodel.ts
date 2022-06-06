@@ -19,12 +19,8 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-    `$ sfdx veloce:loadmodel -n CPQ
-  Model CPQ Successfully Loaded!
-  `,
-    `$ sfdx veloce:loadmodel --name CPQ
-  Model CPQ Successfully Loaded!
-  `
+    `$ sfdx veloce:loadmodel -n CPQ -i orgData/models`, 
+    `$ sfdx veloce:loadmodel -n CPQ -i orgData/models -S`
   ]
 
   public static args = []
@@ -35,6 +31,16 @@ export default class Org extends SfdxCommand {
       char: 'n',
       default: '',
       description: messages.getMessage('nameFlagDescription'),
+      required: true
+    }),
+    inputdir: flags.string({
+      char: 'i',
+      description: messages.getMessage('inputdirFlagDescription'),
+      required: true
+    }),
+    skipui: flags.boolean({
+      char: 'S',
+      description: messages.getMessage('skipuiFlagDescription'),
       required: false
     })
   }
@@ -50,6 +56,8 @@ export default class Org extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     const name: string = this.flags.name
+    const inputdir: string = this.flags.inputdir
+    const skipui: boolean = this.flags.skipui
 
     const homedir = os.homedir()
     const debugSessionFile = path.join(homedir, '.veloce-sfdx/debug.session')
@@ -76,7 +84,7 @@ export default class Org extends SfdxCommand {
     const backendUrl: string | undefined = debugSession.backendUrl
 
     // load PML
-    const pml = readFileSync(`models/${name}.pml`, 'utf8').toString()
+    const pml = readFileSync(`${inputdir}/${name}.pml`, 'utf8').toString()
     try {
       await axios.post(`${backendUrl}/services/dev-override/model/${name}/pml`, {content: pml}, {
         headers
@@ -87,8 +95,11 @@ export default class Org extends SfdxCommand {
     }
     this.ux.log('PML Successfully Loaded!')
 
+    if (skipui) {
+      return { model: pml }
+    }
     // load UI
-    const uiDefs: UiDef[] = new UiDefinitionsBuilder('models', name, {}, this.ux).pack()
+    const uiDefs: UiDef[] = new UiDefinitionsBuilder(inputdir, name, {}, this.ux).pack()
     try {
       await axios.post(`${backendUrl}/services/dev-override/model/${name}/ui`, {content: JSON.stringify(uiDefs)}, { headers })
     } catch ({ data }) {

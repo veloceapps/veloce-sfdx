@@ -1,4 +1,6 @@
 {
   "commandDescription": "Loads PML and UI Model into org, located under models/ folder",
-  "nameFlagDescription": "name of model to pack and upload"
+  "nameFlagDescription": "name of model to pack and upload",
+  "inputdirFlagDescription": "input directory to read model from",
+  "skipuiFlagDescription": "should upload of UI be skipped?"
 }
