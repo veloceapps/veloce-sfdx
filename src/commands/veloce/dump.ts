@@ -172,7 +172,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         }
         for (const [key, value] of Object.entries(r)) {
           if (idReplaceFields.includes(key)) {
-            let s = '' + value
+            let s = value ? value.toString() : '';
             for (const [k, v] of Object.entries(reverseIdmap)) {
               const olds = s
               s = olds.replaceAll(k, v as string)
