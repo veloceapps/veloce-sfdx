@@ -20,17 +20,29 @@ export default class Org extends SfdxCommand {
     public static description = messages.getMessage('commandDescription')
 
     public static examples = [
-        `$ sfdx veloce:fixref -u gp01 -p
-  `]
-  protected static flagsConfig = {
-    // flag with a value (-n, --name=VALUE)
-    perform: flags.boolean({
-      char: 'p',
-      default: false,
-      description: messages.getMessage('performFlagDescription'),
-      required: false
-    })
-  }
+        `$ sfdx veloce:fixref -u gp01 -p --column CustomRefId__c --skip PricebookEntry,Pricebook2`
+    ]
+    protected static flagsConfig = {
+        // flag with a value (-n, --name=VALUE)
+        perform: flags.boolean({
+        char: 'p',
+        default: false,
+        description: messages.getMessage('performFlagDescription'),
+        required: false
+        }),
+        column: flags.string({
+            char: 'c',
+            default: 'VELOCPQ__ReferenceId__c',
+            description: messages.getMessage('columnFlagDescription'),
+            required: false
+        }),
+        skip: flags.array({
+            char: 's',
+            default: [],
+            description: messages.getMessage('skipFlagDescription'),
+            required: false
+        })
+    }
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true
 
@@ -40,29 +52,34 @@ export default class Org extends SfdxCommand {
     // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
     protected static requiresProject = false
 
+
     public async run(): Promise<AnyJson> {
+        let skipObjects = this.flags.skip.map((o: string)=> `'` + o + `'`).join()
         const script = `
             Map<String, Object> result = new Map<String, Object>();
             List<Map<String, String>> veloceObjectsWithoutRefDebug = new List<Map<String, String>>();
             Set<String> veloceObjectsWithoutRefColumn = new Set<String>();
-            String refIDColumn = 'VELOCPQ__ReferenceId__c';
+            String refIDColumn = '${this.flags.column}';
 
             for ( Schema.SObjectType o : Schema.getGlobalDescribe().values() ) {
                 Schema.DescribeSObjectResult objResult = o.getDescribe();
-                if (objResult.queryable) {
-                    Set<String> objectFields = objResult.fields.getMap().keySet();
-                    if(objectFields.contains(refIDColumn.toLowerCase())) {
-                        String query = String.format('SELECT {0} FROM {1} WHERE {2}=null', new String[]{refIDColumn, objResult.getName(), refIDColumn});
-                        List<SObject> veloceObjectsWithoutRef = Database.query(query);
-                        for ( SObject vo : veloceObjectsWithoutRef) {
-                            Map<String, String> objectInfo = new Map<String, String>();
-                            objectInfo.put(vo.getSObjectType().getDescribe().getName(), vo.Id);
-                            veloceObjectsWithoutRefDebug.add(objectInfo);
-                            ${this.flags.perform ? "vo.put('VELOCPQ__ReferenceId__c', vo.Id);" : '//'}
-                            ${this.flags.perform ? 'update vo;' : '//'}
+                List<String> skipObjects = new List<String>{${skipObjects}};
+                if (!skipObjects.contains(objResult.getName())) {
+                    if (objResult.queryable) {
+                        Set<String> objectFields = objResult.fields.getMap().keySet();
+                        if(objectFields.contains(refIDColumn.toLowerCase())) {
+                            String query = String.format('SELECT {0} FROM {1} WHERE {2}=null', new String[]{refIDColumn, objResult.getName(), refIDColumn});
+                            List<SObject> veloceObjectsWithoutRef = Database.query(query);
+                            for ( SObject vo : veloceObjectsWithoutRef) {
+                                Map<String, String> objectInfo = new Map<String, String>();
+                                objectInfo.put(vo.getSObjectType().getDescribe().getName(), vo.Id);
+                                veloceObjectsWithoutRefDebug.add(objectInfo);
+                                ${this.flags.perform ? `vo.put('${this.flags.column}', vo.Id);` : '//'}
+                                ${this.flags.perform ? 'update vo;' : '//'}
+                            }
+                        } else {
+                            veloceObjectsWithoutRefColumn.add(objResult.getName());
                         }
-                    } else {
-                        veloceObjectsWithoutRefColumn.add(objResult.getName());
                     }
                 }
             }

@@ -1,4 +1,6 @@
 {
     "commandDescription": "Fix sobjects external id if empty",
-    "performFlagDescription": "Perform filling of empty external reference id fields"
+    "performFlagDescription": "Perform filling of empty external reference id fields",
+    "columnFlagDescription": "custom reference id column",
+    "skipFlagDescription": "comma-separated list of objects to skip"
   }
