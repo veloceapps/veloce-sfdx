@@ -49,22 +49,20 @@ export default class Org extends SfdxCommand {
 
             for ( Schema.SObjectType o : Schema.getGlobalDescribe().values() ) {
                 Schema.DescribeSObjectResult objResult = o.getDescribe();
-                if (objResult.getName().contains('VELOCPQ_')) {
-                    if (objResult.queryable) {
-                        Set<String> objectFields = objResult.fields.getMap().keySet();
-                        if(objectFields.contains(refIDColumn.toLowerCase())) {
-                            String query = String.format('SELECT {0} FROM {1} WHERE {2}=null', new String[]{refIDColumn, objResult.getName(), refIDColumn});
-                            List<SObject> veloceObjectsWithoutRef = Database.query(query);
-                            for ( SObject vo : veloceObjectsWithoutRef) {
-                                Map<String, String> objectInfo = new Map<String, String>();
-                                objectInfo.put(vo.getSObjectType().getDescribe().getName(), vo.Id);
-                                veloceObjectsWithoutRefDebug.add(objectInfo);
-                                ${this.flags.perform ? "vo.put('VELOCPQ__ReferenceId__c', vo.Id);" : '//'}
-                                ${this.flags.perform ? 'update vo;' : '//'}
-                            }
-                        } else {
-                            veloceObjectsWithoutRefColumn.add(objResult.getName());
+                if (objResult.queryable) {
+                    Set<String> objectFields = objResult.fields.getMap().keySet();
+                    if(objectFields.contains(refIDColumn.toLowerCase())) {
+                        String query = String.format('SELECT {0} FROM {1} WHERE {2}=null', new String[]{refIDColumn, objResult.getName(), refIDColumn});
+                        List<SObject> veloceObjectsWithoutRef = Database.query(query);
+                        for ( SObject vo : veloceObjectsWithoutRef) {
+                            Map<String, String> objectInfo = new Map<String, String>();
+                            objectInfo.put(vo.getSObjectType().getDescribe().getName(), vo.Id);
+                            veloceObjectsWithoutRefDebug.add(objectInfo);
+                            ${this.flags.perform ? "vo.put('VELOCPQ__ReferenceId__c', vo.Id);" : '//'}
+                            ${this.flags.perform ? 'update vo;' : '//'}
                         }
+                    } else {
+                        veloceObjectsWithoutRefColumn.add(objResult.getName());
                     }
                 }
             }
