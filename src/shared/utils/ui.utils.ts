@@ -1,9 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
-import { UX } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
-import { IdMap } from '../types/common.types';
-import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types';
-import { getDirectoryNames, readFileSafe, reverseId } from './common.utils';
+import { existsSync, readFileSync } from 'fs'
+import { UX } from '@salesforce/command'
+import { SfdxError } from '@salesforce/core'
+import { IdMap } from '../types/common.types'
+import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types'
+import { getDirectoryNames, readFileSafe, reverseId } from './common.utils'
 
 const METADATA_DECORATOR_REGEX = /@ElementDefinition\(([\s\S]+)\)(\n|.)*export class/g
 
@@ -95,7 +95,7 @@ export class UiDefinitionsBuilder {
 
     const element: UiElement = {
       script: toBase64(script),
-      children: metadata.children?.map(childName => this.packUiElement(`${dir}/${childName}`))
+      children: metadata.children?.map(childName => this.packUiElement(`${dir}/${childName}`)) ?? []
     }
 
     const styles = readFileSafe(`${dir}/styles.css`)
