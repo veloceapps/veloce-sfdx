@@ -54,7 +54,7 @@ export class UiDefinitionsBuilder {
         )
       }
 
-      this.ux.log(`${originalId} => ${revertedId}`)
+      this.ux?.log(`${originalId} => ${revertedId}`)
 
       if (isLegacyDefinition(ui)) {
         return { ...ui, priceList: revertedId }
@@ -162,7 +162,7 @@ export class UiDefinitionsBuilder {
   private assertPath(p: string): void {
     for (const part of p.split('/')) {
       if (part.startsWith(' ') || part.endsWith(' ') || part.startsWith('\t') || part.endsWith('\t')) {
-        this.ux.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`)
+        this.ux?.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`)
         process.exit(255)
       }
     }
@@ -172,8 +172,8 @@ export class UiDefinitionsBuilder {
     try {
       const b = readFileSync(p).toString()
       return JSON.parse(b)
-    } catch (e) {
-      this.ux.log('Failed to read/parse JSON file ', e)
+    } catch (e: any) {
+      this.ux?.log('Failed to read/parse JSON file ', e)
       process.exit(255)
     }
   }
