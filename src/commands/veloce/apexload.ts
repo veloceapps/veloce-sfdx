@@ -273,16 +273,10 @@ export default class Org extends SfdxCommand {
         }
 
         if (upsert) {
-          for (const vid of idsToValidate) {
-            objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`
-          }
           objects += `o.add(new ${sType} (${fields.join(',')}));\n`
         } else {
           if (this.flags.printids) {
             this.ux.log(`ID: ${extId} = ${r[extId]}`)
-          }
-          for (const vid of idsToValidate) {
-            objects += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\');\n`
           }
           objects += `o = [SELECT Id FROM ${sType} WHERE ${extId}='${r[extId]}' LIMIT 1];\n`
           objects += `${fields.join(';')};\n`
@@ -291,14 +285,20 @@ export default class Org extends SfdxCommand {
       }
 
       extId2OldOrgValues = diff ? await this.getOldRecords(conn, keys, sType, extId, ids) : {}
-
+      script = ""
       if (upsert) {
-        script = `
+        for (const vid of idsToValidate) {
+          script += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\'');\n`
+        }
+        script += `
 ${sType} [] o = new List<${sType}>();
 ${objects}
 upsert o ${extId};
 `
       } else {
+        for (const vid of idsToValidate) {
+          script += `Database.query('SELECT Id FROM '+((Id)'${vid}').getsobjecttype()+' WHERE Id = \\'${vid}\\');\n`
+        }
         // Update only mode!
         script = `
 ${sType} o;
