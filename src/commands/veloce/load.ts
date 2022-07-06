@@ -198,7 +198,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
         extId2OldId[r[extId]] = r['id']
       })
 
-      const idsToValidate = []
+      const idsToValidate = new Set<string>()
       const objects = []
       for (const rWithCase of batch) {
         const r = keysToLowerCase(rWithCase)
@@ -224,7 +224,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
           }
           obj[k] = s
           if (k !== extId && validSFID(s)) {
-            idsToValidate.push(s)
+            idsToValidate.add(s)
           }
         }
         objects.push(obj)

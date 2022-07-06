@@ -214,7 +214,7 @@ export default class Org extends SfdxCommand {
       })
       let script = ''
       let objects = ''
-      const idsToValidate = []
+      const idsToValidate = new Set<string>()
       let keys = []
       for (const rWithCase of batch) {
         const r = keysToLowerCase(rWithCase)
@@ -262,7 +262,7 @@ export default class Org extends SfdxCommand {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`)
           } else {
             if (k !== extId && validSFID(s)) {
-              idsToValidate.push(s)
+              idsToValidate.add(s)
             }
             fields.push(`${upsert ? '' : 'o.'}${k}='${s
               .replaceAll('\\', '\\\\')
