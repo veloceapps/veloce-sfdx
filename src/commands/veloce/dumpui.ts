@@ -3,13 +3,7 @@ import { gunzipSync } from 'zlib'
 import { flags, SfdxCommand } from '@salesforce/command'
 import { Messages, SfdxError } from '@salesforce/core'
 import { AnyJson } from '@salesforce/ts-types'
-import {
-  LegacySection,
-  LegacyUiDefinition,
-  UiDef,
-  UiDefinition,
-  UiElement, UiMetadata
-} from '../../shared/types/ui.types'
+import { LegacySection, LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiMetadata } from '../../shared/types/ui.types'
 import { writeFileSafe } from '../../shared/utils/common.utils'
 import { extractElementMetadata, fromBase64, isLegacyDefinition } from '../../shared/utils/ui.utils'
 
@@ -52,7 +46,7 @@ export default class Org extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     const modelName: string = this.flags.name
     const documentId = await this.getDocumentId(modelName)
-    const uiDefs = await this.fetchUiDefinitions(documentId)
+    const uiDefs = documentId ? await this.fetchUiDefinitions(documentId) : []
     const path = this.flags.outputdir as string
 
     // legacy ui definitions metadata is stored in global metadata.json as array
@@ -77,7 +71,11 @@ export default class Org extends SfdxCommand {
   }
 
   private async getDocumentId(modelName: string): Promise<string | undefined> {
-    const conn = this.org.getConnection()
+    const conn = this.org?.getConnection()
+    if (!conn) {
+      return
+    }
+
     const query = `Select VELOCPQ__UiDefinitionsId__c from VELOCPQ__ProductModel__c WHERE Name='${modelName}'`
 
     const result = await conn.query<{ 'VELOCPQ__UiDefinitionsId__c': string }>(query)
@@ -91,7 +89,11 @@ export default class Org extends SfdxCommand {
   }
 
   private async fetchUiDefinitions(documentId: string): Promise<UiDef[]> {
-    const conn = this.org.getConnection()
+    const conn = this.org?.getConnection()
+    if (!conn) {
+      return []
+    }
+
     const query = `Select Body from Document WHERE Id='${documentId}'`
 
     // get attachment url
@@ -131,12 +133,7 @@ export default class Org extends SfdxCommand {
     metadataArray.push(legacyMetadata)
   }
 
-  private saveLegacySections(
-    sections: LegacySection[],
-    path: string,
-    metadata: LegacyUiDefinition,
-    parentId?: string
-  ): void {
+  private saveLegacySections(sections: LegacySection[], path: string, metadata: LegacyUiDefinition, parentId?: string): void {
     const firstChildren = sections.filter(s => s.parentId === parentId)
 
     firstChildren.forEach(c => {
@@ -186,7 +183,8 @@ export default class Org extends SfdxCommand {
 
     // save elements recursively
     const childrenNames = children.reduce((acc, child) => {
-      return [...acc, this.saveElement(child, path)]
+      const elName = this.saveElement(child, path)
+      return elName ? [...acc, elName] : acc
     }, [] as string[])
 
     // create UI Definition metadata
@@ -197,9 +195,13 @@ export default class Org extends SfdxCommand {
     writeFileSafe(path, 'metadata.json', JSON.stringify(metadata, null, 2) + '\n')
   }
 
-  private saveElement(el: UiElement, path: string): string {
+  private saveElement(el: UiElement, path: string): string | undefined {
     // name is located in the Angular decorator which is the part of the element script
     const script = el.script && fromBase64(el.script)
+    if (!script) {
+      return
+    }
+
     const elName = extractElementMetadata(script).name
     const elDir = `${path}/${elName}`
 
@@ -207,9 +209,8 @@ export default class Org extends SfdxCommand {
       mkdirSync(elDir, { recursive: true })
     }
 
-    if (script) {
-      writeFileSafe(elDir, 'script.ts', script)
-    }
+    writeFileSafe(elDir, 'script.ts', script)
+
     if (el.styles) {
       writeFileSafe(elDir, 'styles.css', fromBase64(el.styles))
     }

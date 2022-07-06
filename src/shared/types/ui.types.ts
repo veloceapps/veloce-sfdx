@@ -15,7 +15,7 @@ export interface UiDefinition {
 
 export interface UiElementMetadata {
   name: string;
-  children: string[];
+  children?: string[];
 }
 
 export interface UiElement {

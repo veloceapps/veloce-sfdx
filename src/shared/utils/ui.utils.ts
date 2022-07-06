@@ -1,9 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
-import { UX } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
-import { IdMap } from '../types/common.types';
-import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types';
-import { getDirectoryNames, readFileSafe, reverseId } from './common.utils';
+import { existsSync, readFileSync } from 'fs'
+import { UX } from '@salesforce/command'
+import { SfdxError } from '@salesforce/core'
+import { IdMap } from '../types/common.types'
+import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types'
+import { getDirectoryNames, readFileSafe, reverseId } from './common.utils'
 
 const METADATA_DECORATOR_REGEX = /@ElementDefinition\(([\s\S]+)\)(\n|.)*export class/g
 
@@ -54,7 +54,7 @@ export class UiDefinitionsBuilder {
         )
       }
 
-      this.ux.log(`${originalId} => ${revertedId}`)
+      this.ux?.log(`${originalId} => ${revertedId}`)
 
       if (isLegacyDefinition(ui)) {
         return { ...ui, priceList: revertedId }
@@ -95,7 +95,7 @@ export class UiDefinitionsBuilder {
 
     const element: UiElement = {
       script: toBase64(script),
-      children: metadata.children?.map(childName => this.packUiElement(`${dir}/${childName}`))
+      children: metadata.children?.map(childName => this.packUiElement(`${dir}/${childName}`)) ?? []
     }
 
     const styles = readFileSafe(`${dir}/styles.css`)
@@ -162,7 +162,7 @@ export class UiDefinitionsBuilder {
   private assertPath(p: string): void {
     for (const part of p.split('/')) {
       if (part.startsWith(' ') || part.endsWith(' ') || part.startsWith('\t') || part.endsWith('\t')) {
-        this.ux.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`)
+        this.ux?.log(`Path has leading trailing/leading spaces, please remove and rename folder: ${p}`)
         process.exit(255)
       }
     }
@@ -172,8 +172,8 @@ export class UiDefinitionsBuilder {
     try {
       const b = readFileSync(p).toString()
       return JSON.parse(b)
-    } catch (e) {
-      this.ux.log('Failed to read/parse JSON file ', e)
+    } catch (e: any) {
+      this.ux?.log('Failed to read/parse JSON file ', e)
       process.exit(255)
     }
   }
