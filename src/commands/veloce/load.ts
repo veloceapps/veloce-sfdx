@@ -275,7 +275,7 @@ WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER B
             this.ux.log(`Error: ${err}`)
             reject(err)
           })
-          b.poll(5 * 1000, 600 * 1000)
+          b.poll(5 * 1000, 1200 * 1000)
         })
       })
       // Query back Ids
