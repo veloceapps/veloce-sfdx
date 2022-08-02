@@ -1,6 +1,7 @@
 {
   "commandDescription": "Dumps data from Document in org",
   "idFlagDescription": "id of document to upsert",
+  "linkedEntityIdFlagDescription": "id of the object to link the document to",
   "nameFlagDescription": "name of document to upsert",
   "descriptionFlagDescription": "File description",
   "idmapFlagDescription": "idmap.json file path, to store/load <Id:targetId> pairs",

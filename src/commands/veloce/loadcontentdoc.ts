@@ -1,8 +1,9 @@
-import {flags, SfdxCommand} from '@salesforce/command'
-import {Messages} from '@salesforce/core'
-import {AnyJson} from '@salesforce/ts-types'
+import { flags, SfdxCommand } from '@salesforce/command';
+import { Messages } from '@salesforce/core';
+import { AnyJson } from '@salesforce/ts-types';
+
 /* tslint:disable */
-const fs = require('fs');
+const fs = require('fs')
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
@@ -13,7 +14,6 @@ Messages.importMessagesDirectory(__dirname)
 const messages = Messages.loadMessages('veloce-sfdx', 'loadcontentdoc')
 
 export default class Org extends SfdxCommand {
-
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
@@ -22,18 +22,26 @@ export default class Org extends SfdxCommand {
   `,
     `$ sfdx veloce:loadcontentdoc -i 01521000000gHgnAAE --name myname --targetusername myOrg@example.com
   Document content here
+  `,
+    `$ sfdx veloce:loadcontentdoc -i 01521000000gHgnAAE -L aCS040000008PVEGA2 --name myname --targetusername myOrg@example.com
+  Document content here
   `
   ]
 
-  public static args = [{name: 'file'}]
+  public static args = [{ name: 'file' }]
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
-    idmap: flags.string({char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true}),
+    idmap: flags.string({ char: 'I', description: messages.getMessage('idmapFlagDescription'), required: true }),
     id: flags.string({
       char: 'i',
       description: messages.getMessage('idFlagDescription'),
       required: true
+    }),
+    linkedentityid: flags.string({
+      char: 'L',
+      description: messages.getMessage('linkedEntityIdFlagDescription'),
+      required: false
     }),
     name: flags.string({
       char: 'n',
@@ -63,23 +71,23 @@ export default class Org extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     let idmap
+
     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
     } catch (err) {
       this.ux.log(`Failed to load ID-Map file: ${this.flags.idmap} will create new file at the end`)
       idmap = {}
     }
+
     const id = idmap[this.flags.id] ? idmap[this.flags.id] : this.flags.id
-
-    const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'})
+    const linkedEntityId = idmap[this.flags.linkedentityid] ? idmap[this.flags.linkedentityid] : this.flags.linkedentityid
+    const fdata = fs.readFileSync(`${this.flags.inputfile}`, { flag: 'r' })
     const b64Data = fdata.toString('base64')
-
     const conn = this.org.getConnection()
-
     // The type we are querying for
     interface ContentVersion {
       VersionData: string
-      ContentDocumentId: string|undefined
+      ContentDocumentId: string | undefined
       Title: string
       PathOnClient: string
       Description: string
@@ -89,16 +97,13 @@ export default class Org extends SfdxCommand {
     interface ContentDocument {
       Id: string
     }
-
     interface RestResult {
       id: string
       success: boolean
       errors: string[]
     }
-
     // Query the org
     const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`)
-
     if (!result.records || result.records.length <= 0) {
       // Document not found, insert new one.
       const data: ContentVersion = {
@@ -111,42 +116,56 @@ export default class Org extends SfdxCommand {
         SharingPrivacy: 'N'
       }
       /* tslint:disable */
-      const rr = await conn.request({
+      const rr = (await conn.request({
         url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
         body: JSON.stringify(data),
         method: 'POST'
-      } as any) as RestResult;
+      } as any)) as RestResult
       if (!rr.success) {
         this.ux.log(`Failed to upload content version, error: ${rr.errors.join(',')}`)
         process.exit(255)
       }
-
-      const r = await conn.query<ContentVersion>(`Select ContentDocumentId from ContentVersion WHERE IsLatest = true AND Id='${rr.id}'`);
+      const r = await conn.query<ContentVersion>(`Select ContentDocumentId from ContentVersion WHERE IsLatest = true AND Id='${rr.id}'`)
       if (!r.records || r.records.length <= 0) {
         this.ux.log(`Failed to query newly created content record, no results`)
         process.exit(255)
       }
-
       // Store new ID in idmap
       if (this.flags.id !== r.records[0].ContentDocumentId) {
         this.ux.log(`${this.flags.id} => ${r.records[0].ContentDocumentId}`)
-        idmap[this.flags.id] = r.records[0].ContentDocumentId;
+        idmap[this.flags.id] = r.records[0].ContentDocumentId
+      }
+
+      if (linkedEntityId) {
+        this.ux.log(`Linking document ${id} to object ${linkedEntityId}`)
+
+        const response = (await conn.request({
+          url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentDocumentLink`,
+          body: JSON.stringify({
+            ContentDocumentId: r.records[0].ContentDocumentId,
+            LinkedEntityId: linkedEntityId,
+            Visibility: 'AllUsers '
+          }),
+          method: 'POST'
+        })) as RestResult
+
+        if (!response.success) {
+          this.ux.log(`Failed to document ${id} to object ${linkedEntityId}, error: ${response.errors.join(',')}`)
+          process.exit(255)
+        }
       }
     } else {
       // Document found, only upload new ContentVersion
-      const docId = result.records[0].Id;
-
-      const query = `Select VersionData from ContentVersion WHERE IsLatest = true AND ContentDocumentId='${docId}'`;
-      const qr = await conn.query<ContentVersion>(query);
-      const url = qr.records[0].VersionData;
-      const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
-
+      const docId = result.records[0].Id
+      const query = `Select VersionData from ContentVersion WHERE IsLatest = true AND ContentDocumentId='${docId}'`
+      const qr = await conn.query<ContentVersion>(query)
+      const url = qr.records[0].VersionData
+      const res = (await conn.request({ url, encoding: null } as any)) as unknown as Buffer
       if (res.compare(fdata) == 0) {
-        this.ux.log(`Identical document is already uploaded: ${docId}, skipping creation of new ContentVersion!`);
-        return 0;
+        this.ux.log(`Identical document is already uploaded: ${docId}, skipping creation of new ContentVersion!`)
+        return 0
       }
-      this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`);
-
+      this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`)
       const data: ContentVersion = {
         VersionData: b64Data,
         ContentDocumentId: docId,
@@ -155,22 +174,21 @@ export default class Org extends SfdxCommand {
         Description: this.flags.description,
         SharingOption: 'A',
         SharingPrivacy: 'N'
-      };
+      }
       /* tslint:disable */
-      const r = await conn.request({
+      const r = (await conn.request({
         url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
         body: JSON.stringify(data),
         method: 'POST'
-      } as any) as RestResult;
+      } as any)) as RestResult
       if (!r.success) {
         this.ux.log(`Upload of content version failed: ${r.errors.join(',')}`)
         process.exit(255)
       }
     }
-
-    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), {flag: 'w+'});
-    this.ux.log(`Successfully loaded from ${this.flags.inputfile}`);
+    fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), { flag: 'w+' })
+    this.ux.log(`Successfully loaded from ${this.flags.inputfile}`)
     // Return an object to be displayed with --json
-    return {orgId: this.org.getOrgId()};
+    return { orgId: this.org.getOrgId() }
   }
 }
