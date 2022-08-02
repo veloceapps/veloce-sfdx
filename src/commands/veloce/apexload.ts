@@ -4,6 +4,7 @@ import {Tooling} from '@salesforce/core/lib/connection'
 import {AnyJson} from '@salesforce/ts-types'
 import {QueryResult} from 'jsforce'
 import 'ts-replace-all'
+import { sleep } from '../../shared/utils/common.utils'
 
 /* tslint:disable */
 const apexNode = require('@salesforce/apex-node');
@@ -306,6 +307,8 @@ ${objects}
 `
       }
 
+      await sleep(300) // prevent api rate limit\
+      this.ux.log('sleep 300 ms')
       if (!dry) {
         const exec = new apexNode.ExecuteService(conn)
         const execAnonOptions = Object.assign({}, {apexCode: script})

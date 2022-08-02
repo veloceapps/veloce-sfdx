@@ -54,3 +54,9 @@ export const getFileNames = (dir: string): string[] => {
   const result = readdirSync(dir, { withFileTypes: true })
   return result.filter(dirent => dirent.isFile()).map(dirent => dirent.name)
 }
+
+export const sleep = (ms: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
