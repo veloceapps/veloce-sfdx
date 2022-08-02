@@ -57,6 +57,10 @@ export default class Org extends SfdxCommand {
       char: 'f',
       description: messages.getMessage('inputfileFlagDescription'),
       required: true
+    }),
+    tags: flags.string({
+      char: 't',
+      description: messages.getMessage('tagsFlagDescription'),
     })
   }
 
@@ -70,7 +74,7 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    let idmap
+    let idmap;
 
     try {
       idmap = JSON.parse(fs.readFileSync(this.flags.idmap).toString())
@@ -86,21 +90,22 @@ export default class Org extends SfdxCommand {
     const conn = this.org.getConnection()
     // The type we are querying for
     interface ContentVersion {
-      VersionData: string
-      ContentDocumentId: string | undefined
-      Title: string
-      PathOnClient: string
-      Description: string
-      SharingOption: string
-      SharingPrivacy: string
+      VersionData: string;
+      ContentDocumentId: string | undefined;
+      Title: string;
+      PathOnClient: string;
+      Description: string;
+      TagCsv: string;
+      SharingOption: string;
+      SharingPrivacy: string;
     }
     interface ContentDocument {
       Id: string
     }
     interface RestResult {
-      id: string
-      success: boolean
-      errors: string[]
+      id: string;
+      success: boolean;
+      errors: string[];
     }
     // Query the org
     const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`)
@@ -112,6 +117,7 @@ export default class Org extends SfdxCommand {
         Title: this.flags.name,
         PathOnClient: this.flags.name,
         Description: this.flags.description,
+        TagCsv: this.flags.tags ?? '',
         SharingOption: 'A',
         SharingPrivacy: 'N'
       }
@@ -172,6 +178,7 @@ export default class Org extends SfdxCommand {
         Title: this.flags.name,
         PathOnClient: this.flags.name,
         Description: this.flags.description,
+        TagCsv: this.flags.tags ?? '',
         SharingOption: 'A',
         SharingPrivacy: 'N'
       }
