@@ -307,8 +307,8 @@ ${objects}
 `
       }
 
-      await sleep(1000) // prevent api rate limit\
-      this.ux.log('sleep 1000 ms')
+      await sleep(500) // prevent api rate limit\
+      this.ux.log('sleep 500 ms')
       if (!dry) {
         const exec = new apexNode.ExecuteService(conn)
         const execAnonOptions = Object.assign({}, {apexCode: script})
