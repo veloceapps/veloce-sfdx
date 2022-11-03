@@ -1,9 +1,9 @@
-import { existsSync, readFileSync } from 'fs'
-import { UX } from '@salesforce/command'
-import { SfdxError } from '@salesforce/core'
-import { IdMap } from '../types/common.types'
-import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types'
-import { getDirectoryNames, readFileSafe, reverseId } from './common.utils'
+import { existsSync, readFileSync } from 'fs';
+import { UX } from '@salesforce/command';
+import { SfdxError } from '@salesforce/core';
+import { IdMap } from '../types/common.types';
+import { LegacyUiDefinition, UiDef, UiDefinition, UiElement, UiElementMetadata, UiMetadata } from '../types/ui.types';
+import { getDirectoryNames, readFileSafe, reverseId } from './common.utils';
 
 const METADATA_DECORATOR_REGEX = /@ElementDefinition\(([\s\S]+)\)(\n|.)*export class/g
 
@@ -59,7 +59,7 @@ export class UiDefinitionsBuilder {
       if (isLegacyDefinition(ui)) {
         return { ...ui, priceList: revertedId }
       } else {
-        return { ...ui, properties: { ...ui.properties, pricelistId: revertedId } }
+        return { ...ui, properties: { ...ui.properties, priceList: revertedId, pricelistId: revertedId } }
       }
     })
   }
