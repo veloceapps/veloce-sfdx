@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages } from '@salesforce/core';
+import { Connection, Messages } from '@salesforce/core'
 import { AnyJson } from '@salesforce/ts-types';
 
 /* tslint:disable */
@@ -12,6 +12,59 @@ Messages.importMessagesDirectory(__dirname)
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'loadcontentdoc')
+
+interface RestResult {
+  id: string;
+  success: boolean;
+  errors: string[];
+}
+interface ContentDocumentLink {
+  ContentDocumentId: string,
+}
+
+const linkContentDocument = async (conn: Connection, linkedEntityId: string, docId: string, skipdelete?: boolean) => {
+
+  const query = `SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = '${linkedEntityId}'`;
+  const linkedDocsRes = await conn.query<ContentDocumentLink>(query);
+
+  if (linkedDocsRes.records.length === 0 || !linkedDocsRes.records.some(({ContentDocumentId}) => ContentDocumentId === docId)) {
+    console.log(`Linking document ${docId} to object ${linkedEntityId}`);
+
+    const response = (await conn.request({
+      url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentDocumentLink`,
+      body: JSON.stringify({
+        ContentDocumentId: docId,
+        LinkedEntityId: linkedEntityId,
+        Visibility: 'AllUsers '
+      }),
+      method: 'POST'
+    })) as RestResult;
+
+    if (!response.success) {
+      console.log(`Failed to link document ${docId} to object ${linkedEntityId}, error: ${response.errors.join(',')}`);
+      process.exit(255);
+    }
+  }
+  if (!skipdelete) {
+    const docsToDelete = linkedDocsRes.records.reduce((acc, {ContentDocumentId}) => {
+      if (ContentDocumentId !== docId) {
+        acc.push(ContentDocumentId);
+      }
+      return acc;
+    }, [] as string[]);
+    if (docsToDelete.length) {
+      const deleteResult = await conn.sobject('ContentDocument').delete(docsToDelete);
+      deleteResult.forEach((result) => {
+        if (result.success) {
+          console.log(`ContentDocument with id ${result.id} is deleted`);
+        } else {
+          console.log(`Failed to delete ContentDocument: ${JSON.stringify(result)}`);
+          process.exit(255);
+        }
+      });
+    }
+  }
+}
 
 export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription')
@@ -61,7 +114,11 @@ export default class Org extends SfdxCommand {
     tags: flags.string({
       char: 't',
       description: messages.getMessage('tagsFlagDescription'),
-    })
+    }),
+    skipdelete: flags.boolean({
+      char: 's',
+      description: messages.getMessage('skipdeleteFlagDescription'),
+    }),
   }
 
   // Comment this out if your command does not require an org username
@@ -102,11 +159,6 @@ export default class Org extends SfdxCommand {
     interface ContentDocument {
       Id: string
     }
-    interface RestResult {
-      id: string;
-      success: boolean;
-      errors: string[];
-    }
     // Query the org
     const result = await conn.query<ContentDocument>(`Select Id from ContentDocument WHERE Id='${id}'`)
     if (!result.records || result.records.length <= 0) {
@@ -143,22 +195,7 @@ export default class Org extends SfdxCommand {
       }
 
       if (linkedEntityId) {
-        this.ux.log(`Linking document ${id} to object ${linkedEntityId}`)
-
-        const response = (await conn.request({
-          url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentDocumentLink`,
-          body: JSON.stringify({
-            ContentDocumentId: r.records[0].ContentDocumentId,
-            LinkedEntityId: linkedEntityId,
-            Visibility: 'AllUsers '
-          }),
-          method: 'POST'
-        })) as RestResult
-
-        if (!response.success) {
-          this.ux.log(`Failed to document ${id} to object ${linkedEntityId}, error: ${response.errors.join(',')}`)
-          process.exit(255)
-        }
+        await linkContentDocument(conn, linkedEntityId, r.records[0].ContentDocumentId, this.flags.skipdelete);
       }
     } else {
       // Document found, only upload new ContentVersion
@@ -192,7 +229,12 @@ export default class Org extends SfdxCommand {
         this.ux.log(`Upload of content version failed: ${r.errors.join(',')}`)
         process.exit(255)
       }
+
+      if (linkedEntityId) {
+        await linkContentDocument(conn, linkedEntityId, docId, this.flags.skipdelete);
+      }
     }
+
     fs.writeFileSync(this.flags.idmap, JSON.stringify(idmap, null, 2), { flag: 'w+' })
     this.ux.log(`Successfully loaded from ${this.flags.inputfile}`)
     // Return an object to be displayed with --json

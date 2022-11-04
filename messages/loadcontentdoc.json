@@ -6,5 +6,6 @@
   "descriptionFlagDescription": "File description",
   "idmapFlagDescription": "idmap.json file path, to store/load <Id:targetId> pairs",
   "inputfileFlagDescription": "relative/full path to read Document from",
-  "tagsFlagDescription": "comma-separated document tags"
+  "tagsFlagDescription": "comma-separated document tags",
+  "skipdeleteFlagDescription": "Only for upload, skip db clean up"
 }
