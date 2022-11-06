@@ -22,7 +22,7 @@ interface ContentDocumentLink {
   ContentDocumentId: string,
 }
 
-const linkContentDocument = async (conn: Connection, linkedEntityId: string, docId: string, skipdelete?: boolean) => {
+const linkContentDocument = async (conn: Connection, linkedEntityId: string, docId: string, cleanup?: boolean) => {
 
   const query = `SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = '${linkedEntityId}'`;
   const linkedDocsRes = await conn.query<ContentDocumentLink>(query);
@@ -45,7 +45,7 @@ const linkContentDocument = async (conn: Connection, linkedEntityId: string, doc
       process.exit(255);
     }
   }
-  if (!skipdelete) {
+  if (cleanup) {
     const docsToDelete = linkedDocsRes.records.reduce((acc, {ContentDocumentId}) => {
       if (ContentDocumentId !== docId) {
         acc.push(ContentDocumentId);
@@ -115,9 +115,9 @@ export default class Org extends SfdxCommand {
       char: 't',
       description: messages.getMessage('tagsFlagDescription'),
     }),
-    skipdelete: flags.boolean({
-      char: 's',
-      description: messages.getMessage('skipdeleteFlagDescription'),
+    cleanup: flags.boolean({
+      char: 'c',
+      description: messages.getMessage('cleanupFlagDescription'),
     }),
   }
 
@@ -195,7 +195,7 @@ export default class Org extends SfdxCommand {
       }
 
       if (linkedEntityId) {
-        await linkContentDocument(conn, linkedEntityId, r.records[0].ContentDocumentId, this.flags.skipdelete);
+        await linkContentDocument(conn, linkedEntityId, r.records[0].ContentDocumentId, this.flags.cleanup);
       }
     } else {
       // Document found, only upload new ContentVersion
@@ -231,7 +231,7 @@ export default class Org extends SfdxCommand {
       }
 
       if (linkedEntityId) {
-        await linkContentDocument(conn, linkedEntityId, docId, this.flags.skipdelete);
+        await linkContentDocument(conn, linkedEntityId, docId, this.flags.cleanup);
       }
     }
 
