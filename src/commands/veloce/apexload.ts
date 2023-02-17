@@ -151,7 +151,7 @@ export default class Org extends SfdxCommand {
     // retrieve types of args
     const conn = this.org.getConnection()
     const fieldsResult = await conn.autoFetchQuery(`
-      SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+      SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, ValueTypeId, IsCalculated
       FROM FieldDefinition
       WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}')
       ORDER BY QualifiedApiName
@@ -159,15 +159,20 @@ export default class Org extends SfdxCommand {
 
     for (const f of fieldsResult.records) {
       const apiName = f['QualifiedApiName'].toLowerCase()
-      const datatype = f['DataType']
-      if (datatype.includes('Formula')) {
-        ignorefields.push(apiName)
-      } else if (datatype.includes('Checkbox')) {
-        boolfields.push(apiName)
-      } else if (datatype.includes('Number') || datatype.includes('Percent') || datatype.includes('Currency')) {
-        numericfields.push(apiName)
-      } else if (datatype.includes('Date')) {
-        datefields.push(apiName)
+      const valueTypeId = f['ValueTypeId'];
+      const isCalculated = f['IsCalculated'];
+
+      if (isCalculated === 'true') {
+        ignorefields.push(apiName);
+      }
+      else if (valueTypeId === 'boolean') {
+        boolfields.push(apiName);
+      }
+      else if (valueTypeId === 'double' || valueTypeId === 'integer') {
+        numericfields.push(apiName);
+      }
+      else if (valueTypeId === 'datetime' || valueTypeId === 'date') {
+        datefields.push(apiName);
       }
     }
 

@@ -157,15 +157,16 @@ export default class Org extends SfdxCommand {
     // retrieve types of args
     const conn = this.org.getConnection()
     const fieldsResult = await conn.autoFetchQuery(`
-SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, DataType
+SELECT EntityDefinition.QualifiedApiName, QualifiedApiName, IsCalculated
 FROM FieldDefinition
 WHERE EntityDefinition.QualifiedApiName IN ('${this.flags.sobjecttype}') ORDER BY QualifiedApiName
     `, {autoFetch: true, maxFetch: 50000})
 
     for (const f of fieldsResult.records) {
       const apiName = f['QualifiedApiName']
-      const datatype = f['DataType']
-      if (datatype.includes('Formula')) {
+      const isCalculated = f['IsCalculated'];
+
+      if (isCalculated === 'true') {
         ignorefields.push(apiName.toLowerCase())
       }
     }
