@@ -5,5 +5,5 @@
   "foldernameFlagDescription": "name of folder to upsert and bind document to",
   "idmapFlagDescription": "idmap.json file path, to store/load <Id:targetId> pairs",
   "inputfileFlagDescription": "relative/full path to read Document from",
-  "compressionFlagDescription": "compression of dumped Document"
+  "compressionFlagDescription": "compression of loaded Document"
 }
