@@ -37,6 +37,12 @@ export default class Org extends SfdxCommand {
       char: 'o',
       description: messages.getMessage('outputfileFlagDescription'),
       required: true
+    }),
+    compression: flags.string({
+      char: 'c',
+      description: messages.getMessage('compressionFlagDescription'),
+      required: false,
+      default: 'gzip'
     })
   }
 
@@ -70,8 +76,12 @@ export default class Org extends SfdxCommand {
     /* tslint:disable */
     const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
     /* tslint:enable */
-    const gzipped = Buffer.from(res.toString(), 'base64')
-    const data = zlib.gunzipSync(gzipped)
+
+    let data = res;
+    if (this.flags.compression === 'gzip') {
+      data = zlib.gunzipSync(Buffer.from(res.toString(), 'base64'));
+    }
+
     fs.writeFileSync(`${this.flags.outputfile}`, data, {flag: 'w+'})
 
     this.ux.log(`Successfully saved into ${this.flags.outputfile}`)
