@@ -137,6 +137,7 @@ export default class Org extends SfdxCommand {
     }
     const boolfields = []
     const datefields = []
+    const datetimefields = []
     const numericfields = []
 
     const fileContent = fs.readFileSync(this.flags.file)
@@ -171,8 +172,11 @@ export default class Org extends SfdxCommand {
       else if (valueTypeId === 'double' || valueTypeId === 'integer') {
         numericfields.push(apiName);
       }
-      else if (valueTypeId === 'datetime' || valueTypeId === 'date') {
+      else if (valueTypeId === 'date') {
         datefields.push(apiName);
+      }
+      else if (valueTypeId === 'datetime') {
+        datetimefields.push(apiName);
       }
     }
 
@@ -264,6 +268,8 @@ export default class Org extends SfdxCommand {
             }
           } else if (datefields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`)
+          } else if (datetimefields.includes(k)) {
+            fields.push(`${upsert ? '' : 'o.'}${k}=datetime.valueOf('${s}')`)
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`)
           } else {
