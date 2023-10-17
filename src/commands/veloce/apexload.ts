@@ -269,7 +269,7 @@ export default class Org extends SfdxCommand {
           } else if (datefields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=date.valueOf('${s}')`)
           } else if (datetimefields.includes(k)) {
-            fields.push(`${upsert ? '' : 'o.'}${k}=datetime.valueOf('${s}')`)
+            fields.push(`${upsert ? '' : 'o.'}${k}=(DateTime)JSON.deserialize('"${s}"', DateTime.class)`)
           } else if (numericfields.includes(k)) {
             fields.push(`${upsert ? '' : 'o.'}${k}=${s}`)
           } else {
