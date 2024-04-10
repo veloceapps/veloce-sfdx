@@ -1,7 +1,7 @@
 {
   "name": "veloce-sfdx",
   "description": "veloce sfdx plugin",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "author": "veloceapps",
   "bugs": "https://github.com/veloceapps/veloce-sfdx/issues",
   "dependencies": {
