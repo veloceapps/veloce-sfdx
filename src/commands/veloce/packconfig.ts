@@ -55,7 +55,7 @@ export default class Org extends SfdxCommand {
       console.log('processing configuration file:', file)
       const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: '', VELOCPQ__ReferenceId__c: ''}
       output.VELOCPQ__Value__c = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString()
-      output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file
+      output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.lastIndexOf('.')) : file
       output.VELOCPQ__ReferenceId__c = output.VELOCPQ__Key__c
       result.push(output)
     })
