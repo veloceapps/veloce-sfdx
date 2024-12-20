@@ -29,7 +29,8 @@ export default class Org extends SfdxCommand {
 
   protected static flagsConfig = {
     inputdir: flags.string({char: 'i', description: messages.getMessage('inputdirFlagDescription'), required: true}),
-    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true})
+    outputfile: flags.string({char: 'o', description: messages.getMessage('outputfileFlagDescription'), required: true}),
+    prefix: flags.string({char: 'p', description: messages.getMessage('prefixFlagDescription'), required: false})
   }
 
   // Comment this out if your command does not require an org username
@@ -42,21 +43,22 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false
 
   public async run(): Promise<AnyJson> {
-    const inputdir = this.flags.inputdir
-    const outputfile = this.flags.outputfile
+    const inputdir = this.flags.inputdir;
+    const outputfile = this.flags.outputfile;
+    const prefix: string = this.flags.prefix || 'VELOCPQ__';
     const csvWriter = createCsvWriter({
-      header: [{id: 'VELOCPQ__Key__c', title: 'VELOCPQ__Key__c'},
-        {id: 'VELOCPQ__Value__c', title: 'VELOCPQ__Value__c'},
-        {id: 'VELOCPQ__ReferenceId__c', title: 'VELOCPQ__ReferenceId__c'}],
+      header: [{id: `${prefix}Key__c`, title: `${prefix}Key__c`},
+        {id: `${prefix}Value__c`, title: `${prefix}Value__c`},
+        {id: `${prefix}ReferenceId__c`, title: `${prefix}ReferenceId__c`}],
       path: outputfile
     })
     const result = []
     fs.readdirSync(inputdir).forEach(file => {
       console.log('processing configuration file:', file)
-      const output = {VELOCPQ__Value__c: '', VELOCPQ__Key__c: '', VELOCPQ__ReferenceId__c: ''}
-      output.VELOCPQ__Value__c = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString()
-      output.VELOCPQ__Key__c = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file
-      output.VELOCPQ__ReferenceId__c = output.VELOCPQ__Key__c
+      const output = {[`${prefix}Value__c`]: '', [`${prefix}Key__c`]: '', [`${prefix}ReferenceId__c`]: ''}
+      output[`${prefix}Value__c`] = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString()
+      output[`${prefix}Key__c`] = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file
+      output[`${prefix}ReferenceId__c`] = output[`${prefix}Key__c`]
       result.push(output)
     })
     csvWriter.writeRecords(result).then(() => console.log('Result saved to', outputfile))

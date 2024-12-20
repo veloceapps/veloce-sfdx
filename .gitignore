@@ -83,3 +83,4 @@ typings/
 yarn-debug.log*
 yarn-error.log*
 *.iml
+.idea/
