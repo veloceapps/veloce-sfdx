@@ -1,9 +1,9 @@
+import { brotliDecompressSync, gunzipSync } from 'zlib';
 import { flags, SfdxCommand } from '@salesforce/command'
 import { Messages, SfdxError } from '@salesforce/core'
 import { AnyJson } from '@salesforce/ts-types'
 /* tslint:disable */
 const fs = require('fs');
-const zlib = require("zlib");
 /* tslint:enable */
 
 // Initialize Messages with the current plugin directory
@@ -13,14 +13,16 @@ Messages.importMessagesDirectory(__dirname)
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('veloce-sfdx', 'dumpdoc')
 
+type compressionMethod = 'gzip' | 'brotli' | 'base64' | 'none';
+
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription')
 
   public static examples = [
-  `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
+    `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
   `,
-  `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
+    `$ sfdx veloce:dumpdoc -i 01521000000gHgnAAE -o file.pml --name myname --targetusername myOrg@example.com
   `
   ]
 
@@ -37,6 +39,11 @@ export default class Org extends SfdxCommand {
       char: 'o',
       description: messages.getMessage('outputfileFlagDescription'),
       required: true
+    }),
+    compression: flags.string({
+      char: 'c',
+      description: messages.getMessage('compressionFlagDescription'),
+      required: false,
     })
   }
 
@@ -70,8 +77,8 @@ export default class Org extends SfdxCommand {
     /* tslint:disable */
     const res = ((await conn.request({ url, encoding: null } as any)) as unknown) as Buffer;
     /* tslint:enable */
-    const gzipped = Buffer.from(res.toString(), 'base64')
-    const data = zlib.gunzipSync(gzipped)
+
+    const data = await decompressResult(res, this.flags.compression);
     fs.writeFileSync(`${this.flags.outputfile}`, data, {flag: 'w+'})
 
     this.ux.log(`Successfully saved into ${this.flags.outputfile}`)
@@ -79,3 +86,49 @@ export default class Org extends SfdxCommand {
     return {orgId: this.org.getOrgId()}
   }
 }
+
+async function decompressResult(res: Buffer, method: compressionMethod | undefined): Promise<Buffer | string | undefined> {
+  const base64Data = Buffer.from(res.toString(), 'base64');
+
+  switch (method) {
+    case 'gzip':
+      return gunzipSync(base64Data).toString();
+    case 'brotli':
+      return brotliDecompressSync(base64Data).toString('utf8');
+    case 'base64':
+      return base64Data;
+    case 'none':
+      return res;
+    default: {
+      return new Promise(resolve => {
+        try {
+          if (checkSequence([0x1f, 0x8b], base64Data)) {
+            // gzip compression method
+            const result = gunzipSync(base64Data).toString()
+            resolve(result);
+          } else {
+            // brotli compression method
+            const result = brotliDecompressSync(base64Data).toString('utf8');
+            resolve(result);
+          }
+        } catch (err) {
+          resolve(res);
+        }
+      })
+    }
+  }
+}
+
+// https://stackoverflow.com/questions/71868696/check-if-file-is-compressed-browser-side
+const checkSequence = (sequence: number[], bytes: Uint8Array): boolean => {
+  if (sequence.length > bytes.length) {
+    throw new Error(`bytes.size ${bytes.length} sequence.length ${sequence.length}`);
+  }
+  for (let index = 0; index < sequence.length; index++) {
+    const byte = bytes[index];
+    if (byte !== sequence[index]) {
+      return false;
+    }
+  }
+  return true;
+};

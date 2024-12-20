@@ -50,6 +50,12 @@ export default class Org extends SfdxCommand {
       char: 'f',
       description: messages.getMessage('inputfileFlagDescription'),
       required: true
+    }),
+    compression: flags.string({
+      char: 'c',
+      description: messages.getMessage('compressionFlagDescription'),
+      required: false,
+      default: 'gzip'
     })
   }
 
@@ -74,9 +80,13 @@ export default class Org extends SfdxCommand {
 
     // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
     const fdata = fs.readFileSync(`${this.flags.inputfile}`, {flag: 'r'})
-    const gzipped = zlib.gzipSync(fdata)
-    // Encode to base64 TWICE!, first time is requirement of POST/PATCH, and it will be decoded on reads automatically by SF.
-    const b64Data = Buffer.from(gzipped.toString('base64')).toString('base64')
+    let data = fdata;
+    if (this.flags.compression === 'gzip') {
+      const gzipped = zlib.gzipSync(fdata);
+      // Encode to base64 TWICE!, first time is requirement of POST/PATCH, and it will be decoded on reads automatically by SF.
+      data = Buffer.from(gzipped.toString('base64'))
+    }
+    const b64Data = data.toString('base64')
 
     const conn = this.org.getConnection()
 
@@ -111,9 +121,10 @@ export default class Org extends SfdxCommand {
     if (!result.records || result.records.length <= 0) {
       // Document not found, insert new one.
       // Check if veloce folder exists:
+      const folderName: string = this.flags.foldername;
       const folderResult = await conn.query<Folder>(`Select Id, Name, Type
                                                      from Folder
-                                                     WHERE Name = 'velo_product_models'`)
+                                                     WHERE Name = '${folderName}'`)
       if (!folderResult.records || folderResult.records.length <= 0) {
         // Create new Folder
         const folder = {

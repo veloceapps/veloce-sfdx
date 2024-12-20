@@ -206,28 +206,28 @@ export default class Org extends SfdxCommand {
       const res = (await conn.request({ url, encoding: null } as any)) as unknown as Buffer
       if (res.compare(fdata) == 0) {
         this.ux.log(`Identical document is already uploaded: ${docId}, skipping creation of new ContentVersion!`)
-        return 0
-      }
-      this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`)
-      const data: ContentVersion = {
-        VersionData: b64Data,
-        ContentDocumentId: docId,
-        Title: this.flags.name,
-        PathOnClient: this.flags.name,
-        Description: this.flags.description,
-        TagCsv: this.flags.tags ?? '',
-        SharingOption: 'A',
-        SharingPrivacy: 'N'
-      }
-      /* tslint:disable */
-      const r = (await conn.request({
-        url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
-        body: JSON.stringify(data),
-        method: 'POST'
-      } as any)) as RestResult
-      if (!r.success) {
-        this.ux.log(`Upload of content version failed: ${r.errors.join(',')}`)
-        process.exit(255)
+      } else {
+        this.ux.log(`Patching existing document ${this.flags.name} with id ${docId}`)
+        const data: ContentVersion = {
+          VersionData: b64Data,
+          ContentDocumentId: docId,
+          Title: this.flags.name,
+          PathOnClient: this.flags.name,
+          Description: this.flags.description,
+          TagCsv: this.flags.tags ?? '',
+          SharingOption: 'A',
+          SharingPrivacy: 'N'
+        }
+        /* tslint:disable */
+        const r = (await conn.request({
+          url: `/services/data/v${conn.getApiVersion()}/sobjects/ContentVersion`,
+          body: JSON.stringify(data),
+          method: 'POST'
+        } as any)) as RestResult
+        if (!r.success) {
+          this.ux.log(`Upload of content version failed: ${r.errors.join(',')}`)
+          process.exit(255)
+        }
       }
 
       if (linkedEntityId) {

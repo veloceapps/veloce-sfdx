@@ -57,7 +57,7 @@ export default class Org extends SfdxCommand {
       console.log('processing configuration file:', file)
       const output = {[`${prefix}Value__c`]: '', [`${prefix}Key__c`]: '', [`${prefix}ReferenceId__c`]: ''}
       output[`${prefix}Value__c`] = fs.readFileSync(inputdir + '/' + file, 'UTF-8').toString()
-      output[`${prefix}Key__c`] = file.indexOf('.') > 0 ? file.substring(0, file.indexOf('.')) : file
+      output[`${prefix}Key__c`] = file.indexOf('.') > 0 ? file.substring(0, file.lastIndexOf('.')) : file
       output[`${prefix}ReferenceId__c`] = output[`${prefix}Key__c`]
       result.push(output)
     })
