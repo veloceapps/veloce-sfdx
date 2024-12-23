@@ -16,7 +16,7 @@
     "csv-parse": "^4.15.3",
     "csv-write-stream": "^2.0.0",
     "csv-writer": "^1.6.0",
-    "fast-xml-parser": "^3.19.0",
+    "fast-xml-parser": "^4.4.1",
     "open": "^8.2.1",
     "ts-replace-all": "^1.0.0",
     "tslib": "^2",
