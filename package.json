@@ -9,7 +9,7 @@
     "@oclif/config": "^1",
     "@oclif/errors": "^1",
     "@salesforce/apex-node": "^0.11.0",
-    "@salesforce/command": "^4",
+    "@salesforce/command": "^5.3.9",
     "@salesforce/core": "^2",
     "@typescript-eslint/typescript-estree": "^5.18.0",
     "axios": "^0.27.1",
